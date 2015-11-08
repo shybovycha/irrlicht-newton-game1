@@ -1,0 +1,12 @@
+.DS_Store
+*.log
+*.in
+*.in~
+*.o
+*.trs
+configure
+Makefile
+config.h
+config.status
+LuaCppInterface/.deps
+tests/.deps

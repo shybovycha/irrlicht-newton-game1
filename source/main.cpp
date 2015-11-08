@@ -17,11 +17,13 @@ and tell the linker to link with the .lib file.
 #pragma comment(lib, "Irrlicht.lib")
 #endif
 
+#include <stdio.h>
+#include <fstream>
 #include <irrlicht.h>
-
-extern "C" {
-#include <lua.h>
-};
+#include <map>
+#include <sstream>
+#include <iostream>
+#include "luacppinterface-master/include/luacppinterface.h"
 
 using namespace irr;
 
@@ -59,6 +61,72 @@ private:
     bool KeyIsDown[KEY_KEY_CODES_COUNT];
 };
 
+class ScriptManager {
+private:
+    Lua luaState;
+    std::map<std::string, scene::ISceneNode*> nodes;
+    video::IVideoDriver *driver;
+    scene::ISceneManager *smgr;
+
+    void bindFunctions() {
+        LuaTable global = luaState.GetGlobalEnvironment();
+
+        auto createSphere = luaState.CreateFunction<void(std::string, std::string)>([&](std::string name, std::string tex) -> void { createSphereNode(name, tex); });
+
+        global.Set("createSphere", createSphere);
+    }
+
+public:
+    ScriptManager(scene::ISceneManager *_smgr, video::IVideoDriver *_driver) {
+        driver = _driver;
+        smgr = _smgr;
+    }
+
+    void createSphereNode(const std::string name, const std::string textureFile) {
+        scene::ISceneNode *node = smgr->addSphereSceneNode();
+
+        if (node) {
+            node->setPosition(core::vector3df(0, 0, 30));
+            node->setMaterialTexture(0, driver->getTexture(textureFile.c_str()));
+            node->setMaterialFlag(video::EMF_LIGHTING, false);
+        }
+
+        nodes[name] = node;
+    }
+
+    void createCubeNode(const std::string name, const std::string textureFile) {}
+
+    void setNodePosition(const std::string name, LuaTable pos) {
+        float x, y, z;
+
+        x = pos.Get<float>("x");
+        y = pos.Get<float>("y");
+        z = pos.Get<float>("z");
+
+        nodes[name]->setPosition(core::vector3df(x, y, z));
+    }
+
+    LuaTable getNodePosition(const std::string name) {
+        LuaTable pos = luaState.CreateTable();
+
+        core::vector3df v = nodes[name]->getPosition();
+
+        pos.Set("x", v.X);
+        pos.Set("y", v.Y);
+        pos.Set("z", v.Z);
+
+        return pos;
+    }
+
+    void loadScript(const std::string filename) {
+        std::ifstream inf(filename);
+        std::string code((std::istreambuf_iterator<char>(inf)), std::istreambuf_iterator<char>());
+
+        bindFunctions();
+
+        luaState.RunScript(code);
+    }
+};
 
 /*
 The event receiver for keeping the pressed keys is ready, the actual responses
@@ -80,19 +148,9 @@ int main() {
     video::IVideoDriver *driver = device->getVideoDriver();
     scene::ISceneManager *smgr = device->getSceneManager();
 
-    /*
-    Create the node which will be moved with the WSAD keys. We create a
-    sphere node, which is a built-in geometry primitive. We place the node
-    at (0,0,30) and assign a texture to it to let it look a little bit more
-    interesting. Because we have no dynamic lights in this scene we disable
-    lighting for each model (otherwise the models would be black).
-    */
-    scene::ISceneNode *node = smgr->addSphereSceneNode();
-    if (node) {
-        node->setPosition(core::vector3df(0, 0, 30));
-        node->setMaterialTexture(0, driver->getTexture("../../media/wall.bmp"));
-        node->setMaterialFlag(video::EMF_LIGHTING, false);
-    }
+    ScriptManager *scriptMgr = new ScriptManager(smgr, driver);
+
+    scriptMgr->loadScript("media/scripts/test1.lua");
 
     /*
     Now we create another node, movable using a scene node animator. Scene
@@ -197,7 +255,7 @@ int main() {
 
         /* Check if keys W, S, A or D are being held down, and move the
         sphere node around respectively. */
-        core::vector3df nodePosition = node->getPosition();
+        /*core::vector3df nodePosition = node->getPosition();
 
         if (receiver.IsKeyDown(irr::KEY_KEY_W))
             nodePosition.Y += MOVEMENT_SPEED * frameDeltaTime;
@@ -209,7 +267,7 @@ int main() {
         else if (receiver.IsKeyDown(irr::KEY_KEY_D))
             nodePosition.X += MOVEMENT_SPEED * frameDeltaTime;
 
-        node->setPosition(nodePosition);
+        node->setPosition(nodePosition);*/
 
         driver->beginScene(true, true, video::SColor(255, 113, 113, 133));
 

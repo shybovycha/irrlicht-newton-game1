@@ -1,0 +1,1 @@
+createSphere("sphere1", "media/textures/wall.bmp")
