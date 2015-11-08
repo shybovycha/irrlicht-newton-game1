@@ -26,25 +26,50 @@ and tell the linker to link with the .lib file.
 #include "luacppinterface-master/include/luacppinterface.h"
 #include "cppformat-master/format.h"
 
+#include "newton-dynamics-master/coreLibrary_300/source/newton/Newton.h"
+#include "newton-dynamics-master/packages/dMath/dVector.h"
+#include "newton-dynamics-master/packages/dMath/dMatrix.h"
+#include "newton-dynamics-master/packages/dMath/dQuaternion.h"
+/*#include "newton-dynamics-master/packages/dNewton/dNewton.h"
+#include "newton-dynamics-master/packages/dNewton/dNewtonCollision.h"
+#include "newton-dynamics-master/packages/dNewton/dNewtonDynamicBody.h"*/
+
 using namespace irr;
 
-/*
-To receive events like mouse and keyboard input, or GUI events like "the OK
-button has been clicked", we need an object which is derived from the
-irr::IEventReceiver object. There is only one method to override:
-irr::IEventReceiver::OnEvent(). This method will be called by the engine once
-when an event happens. What we really want to know is whether a key is being
-held down, and so we will remember the current state of each key.
-*/
+class Entity {
+private:
+    scene::ISceneNode *mNode;
+    NewtonBody *mBody;
+
+public:
+    Entity(scene::ISceneNode *node) : mNode(node), mBody(0) {}
+    Entity(scene::ISceneNode *node, NewtonBody *body) : mNode(node), mBody(body) {}
+
+    scene::ISceneNode* getSceneNode() {
+        return mNode;
+    }
+
+    NewtonBody* getBody() {
+        return mBody;
+    }
+
+    void setBody(NewtonBody *body) {
+        mBody = body;
+    }
+};
 
 class ScriptManager {
 private:
     Lua luaState;
+
     std::map<int, bool> keyStates;
-    std::map<std::string, scene::ISceneNode *> nodes;
+    std::map<std::string, Entity*> entities;
+
     video::IVideoDriver *driver;
     scene::ISceneManager *smgr;
+    NewtonWorld *newtonWorld;
 
+private:
     void bindFunctions() {
         LuaTable global = luaState.GetGlobalEnvironment();
 
@@ -55,7 +80,10 @@ private:
                 [&](std::string name, std::string tex) -> void { createCubeNode(name, tex); });
 
         auto createAnimatedMesh = luaState.CreateFunction<void(std::string, std::string, std::string, int, int, int)>(
-                [&](std::string name, std::string model, std::string texture, int frameFrom, int frameTo, int animSpeed) -> void { createAnimatedNode(name, model, texture, frameFrom, frameTo, animSpeed); });
+                [&](std::string name, std::string model, std::string texture, int frameFrom, int frameTo,
+                    int animSpeed) -> void {
+                    createAnimatedNode(name, model, texture, frameFrom, frameTo, animSpeed);
+                });
 
         auto setPosition = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable pos) -> void { setNodePosition(name, pos); });
@@ -74,7 +102,22 @@ private:
                     addNodeCircleAnimator(name, center, radius);
                 });
 
-        auto addForwardAnimator = luaState.CreateFunction<void(std::string, LuaTable, LuaTable, int, bool)>([&](std::string name, LuaTable from, LuaTable to, int animationTime, bool loop) -> void { addNodeForwardAnimator(name, from, to, animationTime, loop); });
+        auto addForwardAnimator = luaState.CreateFunction<void(std::string, LuaTable, LuaTable, int, bool)>(
+                [&](std::string name, LuaTable from, LuaTable to, int animationTime,
+                    bool loop) -> void { addNodeForwardAnimator(name, from, to, animationTime, loop); });
+
+        auto createSphereBody = luaState.CreateFunction<void(std::string, float, float)>(
+                [&](std::string name, float radius, float mass) ->
+                        void { createSphereBodyForNode(name, radius, mass); });
+
+        auto createBoxBody = luaState.CreateFunction<void(std::string, LuaTable, float)>(
+                [&](std::string name, LuaTable size, float mass) -> void { createBoxBodyForNode(name, size, mass); });
+
+        auto addForceFn = luaState.CreateFunction<void(std::string, LuaTable)>(
+                [&](std::string name, LuaTable vec) -> void { addForce(name, vec); });
+
+        auto addImpulseFn = luaState.CreateFunction<void(std::string, LuaTable)>(
+                [&](std::string name, LuaTable vec) -> void { addImpulse(name, vec); });
 
         global.Set("createSphere", createSphere);
         global.Set("createCube", createCube);
@@ -88,6 +131,12 @@ private:
 
         global.Set("addCircleAnimator", addCircleAnimator);
         global.Set("addForwardAnimator", addForwardAnimator);
+
+        global.Set("createSphereBody", createSphereBody);
+        global.Set("createBoxBody", createBoxBody);
+
+        global.Set("addForce", addForceFn);
+        global.Set("addImpulse", addImpulseFn);
     }
 
     void setGlobalVariables() {
@@ -104,22 +153,22 @@ private:
         luaState.GetGlobalEnvironment().Set("KEY_STATE", keysTable);
     }
 
-    scene::ISceneNode *findNode(std::string name) {
-        scene::ISceneNode *node = nodes[name];
+    Entity* findEntity(std::string name) {
+        Entity* entity = entities[name];
 
-        if (!node) {
-            throw fmt::format("Could not find node {1}", name);
+        if (!entity) {
+            throw fmt::format("Could not find entity `{0}`", name);
         }
 
-        return node;
+        return entity;
     }
 
     core::vector3df tableToVector3df(LuaTable pos) {
-        float x = pos.Get<float>("x"),
-                y = pos.Get<float>("y"),
-                z = pos.Get<float>("z");
-
-        return core::vector3df(x, y, z);
+        if (pos.GetTypeOfValueAt("x") == LuaType::nil) {
+            return core::vector3df(pos.Get<float>(0), pos.Get<float>(1), pos.Get<float>(2));
+        } else {
+            return core::vector3df(pos.Get<float>("x"), pos.Get<float>("y"), pos.Get<float>("z"));
+        }
     }
 
     LuaTable vector3dfToTable(core::vector3df pos) {
@@ -132,6 +181,14 @@ private:
         return table;
     }
 
+    dVector tableToDvector(LuaTable vec) {
+        if (vec.GetTypeOfValueAt("x") == LuaType::nil) {
+            return dVector(vec.Get<float>(0), vec.Get<float>(1), vec.Get<float>(2));
+        } else {
+            return dVector(vec.Get<float>("x"), vec.Get<float>("y"), vec.Get<float>("z"));
+        }
+    }
+
     void addAnimator(scene::ISceneNode *node, scene::ISceneNodeAnimator *anim) {
         if (anim) {
             node->addAnimator(anim);
@@ -139,10 +196,107 @@ private:
         }
     }
 
+//    NewtonCollision* createSphereCollisionShape(float radius, scene::ISceneNode *node) {
+    NewtonCollision* createSphereCollisionShape(float radius) {
+//        core::vector3df position = node->getPosition();
+//        core::vector3df center = (core::vector3df(radius, radius, radius) * 0.5f) + position;
+        core::vector3df center = (core::vector3df(radius, radius, radius) * 0.5f);
+        dVector origin(center.X, center.Y, center.Z);
+
+        dMatrix offset(dGetIdentityMatrix());
+        offset.m_posit = origin;
+
+        int shapeId = 0;
+
+        return NewtonCreateSphere(newtonWorld, radius, shapeId, &offset[0][0]);
+    }
+
+    NewtonCollision* createBoxCollisionShape(core::vector3df shapeSize) {
+        //    NewtonCollision* createBoxCollisionShape(core::vector3df shapeSize, scene::ISceneNode *node) {
+        dVector size(shapeSize.X, shapeSize.Y, shapeSize.Z);
+
+//        core::vector3df position = node->getPosition();
+//        core::vector3df center = (shapeSize * 0.5f + position);
+        core::vector3df center = (shapeSize * 0.5f);
+        dVector origin(center.X, center.Y, center.Z);
+
+        dMatrix offset(dGetIdentityMatrix());
+        offset.m_posit = origin;
+
+        int shapeId = 0;
+
+        return NewtonCreateBox(newtonWorld, size.m_x, size.m_y, size.m_z, shapeId, &offset[0][0]);
+    }
+
+    NewtonBody* createDynamicBody(NewtonCollision* shape, float mass) {
+        dMatrix matrix(dGetIdentityMatrix());
+        NewtonBody *body = NewtonCreateDynamicBody(newtonWorld, shape, &matrix[0][0]);
+
+        NewtonBodySetMassProperties(body, mass, shape);
+        NewtonDestroyCollision(shape);
+
+        NewtonBodySetTransformCallback(body, transformCallback);
+        NewtonBodySetForceAndTorqueCallback(body, applyForceAndTorqueCallback);
+
+        return body;
+    }
+
+    NewtonBody* createKinematicBody(NewtonCollision* shape) {
+        dMatrix matrix(dGetIdentityMatrix());
+        NewtonBody *body = NewtonCreateKinematicBody(newtonWorld, shape, &matrix[0][0]);
+
+        NewtonBodySetTransformCallback(body, transformCallback);
+        NewtonBodySetForceAndTorqueCallback(body, applyForceAndTorqueCallback);
+
+        return body;
+    }
+
+    static void transformCallback(const NewtonBody* body, const dFloat* matrix, int threadIndex)
+    {
+        Entity *entity = (Entity*) NewtonBodyGetUserData(body);
+        scene::ISceneNode* node = entity->getSceneNode();
+
+        if (node)
+        {
+            core::matrix4 transform;
+            transform.setM(matrix);
+
+            node->setPosition(transform.getTranslation());
+            node->setRotation(transform.getRotationDegrees());
+        }
+    }
+
+    static void applyForceAndTorqueCallback(const NewtonBody* body, dFloat timestep, int threadIndex)
+    {
+        dFloat Ixx, Iyy, Izz;
+        dFloat mass;
+
+        NewtonBodyGetMassMatrix(body, &mass, &Ixx, &Iyy, &Izz);
+
+        dVector gravityForce(0.0f, mass * -9.8f, 0.0f, 1.0f);
+        NewtonBodySetForce(body, &gravityForce[0]);
+    }
+
+    void initPhysics() {
+        newtonWorld = NewtonCreate();
+        NewtonSetSolverModel(newtonWorld, 1);
+    }
+
+    void updatePhysics(float dt) {
+         NewtonUpdate(newtonWorld, dt);
+    }
+
+    void stopPhysics() {
+        NewtonDestroyAllBodies(newtonWorld);
+        NewtonDestroy(newtonWorld);
+    }
+
 public:
     ScriptManager(scene::ISceneManager *_smgr, video::IVideoDriver *_driver) {
         driver = _driver;
         smgr = _smgr;
+
+        initPhysics();
     }
 
     void createSphereNode(const std::string name, const std::string textureFile) {
@@ -153,7 +307,7 @@ public:
             node->setMaterialFlag(video::EMF_LIGHTING, false);
         }
 
-        nodes[name] = node;
+        entities[name] = new Entity(node);
     }
 
     void createCubeNode(const std::string name, const std::string textureFile) {
@@ -164,7 +318,7 @@ public:
             node->setMaterialFlag(video::EMF_LIGHTING, false);
         }
 
-        nodes[name] = node;
+        entities[name] = new Entity(node);
     }
 
     void createAnimatedNode(const std::string name, const std::string modelFile, const std::string textureFile,
@@ -179,11 +333,11 @@ public:
 
         node->setMaterialTexture(0, driver->getTexture(textureFile.c_str()));
 
-        nodes[name] = node;
+        entities[name] = new Entity(node);
     }
 
     void addNodeCircleAnimator(const std::string name, LuaTable center, float radius) {
-        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNode *node = findEntity(name)->getSceneNode();
         scene::ISceneNodeAnimator *anim = smgr->createFlyCircleAnimator(tableToVector3df(center), radius);
 
         addAnimator(node, anim);
@@ -191,7 +345,7 @@ public:
 
     void addNodeForwardAnimator(const std::string name, LuaTable from, LuaTable to, unsigned int animationTime,
                                 bool loop) {
-        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNode *node = findEntity(name)->getSceneNode();
         scene::ISceneNodeAnimator *anim = smgr->createFlyStraightAnimator(tableToVector3df(from), tableToVector3df(to),
                                                                           animationTime, loop);
 
@@ -199,14 +353,27 @@ public:
     }
 
     void setNodePosition(const std::string name, LuaTable pos) {
-        scene::ISceneNode *node = findNode(name);
-        core::vector3df vec = tableToVector3df(pos);
+        Entity *entity = findEntity(name);
 
-        node->setPosition(vec);
+        if (!entity->getBody()) {
+            scene::ISceneNode *node = findEntity(name)->getSceneNode();
+            core::vector3df vec = tableToVector3df(pos);
+
+            node->setPosition(vec);
+        } else {
+            NewtonBody *body = entity->getBody();
+            dMatrix matrix = dGetIdentityMatrix();
+            NewtonBodyGetMatrix(body, &matrix[0][0]);
+
+            dVector vPos = tableToDvector(pos);
+            matrix.m_posit = vPos;
+
+            NewtonBodySetMatrix(body, &matrix[0][0]);
+        }
     }
 
     void moveNode(const std::string name, LuaTable pos) {
-        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNode *node = findEntity(name)->getSceneNode();
         core::vector3df vec = tableToVector3df(pos);
 
         core::matrix4 m;
@@ -220,14 +387,14 @@ public:
     }
 
     void setNodeRotation(const std::string name, LuaTable rot) {
-        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNode *node = findEntity(name)->getSceneNode();
         core::vector3df vec = tableToVector3df(rot);
 
         node->setRotation(vec);
     }
 
     void setNodeScale(const std::string name, LuaTable scale) {
-        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNode *node = findEntity(name)->getSceneNode();
         core::vector3df vec = tableToVector3df(scale);
 
         node->setScale(vec);
@@ -235,17 +402,65 @@ public:
 
     LuaTable getNodePosition(const std::string name) {
         LuaTable pos = luaState.CreateTable();
-        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNode *node = findEntity(name)->getSceneNode();
 
         return vector3dfToTable(node->getPosition());
     }
 
-    void handleFrame() {
+    void createSphereBodyForNode(const std::string name, float radius, float mass) {
+        Entity *entity = entities[name];
+
+        NewtonCollision *shape = createSphereCollisionShape(radius);
+        NewtonBody *body = createDynamicBody(shape, mass);
+        NewtonBodySetUserData(body, entity);
+        NewtonInvalidateCache(newtonWorld);
+
+        entity->setBody(body);
+    }
+
+    void createBoxBodyForNode(const std::string name, LuaTable size, float mass) {
+        Entity *entity = entities[name];
+
+        NewtonCollision *shape = createBoxCollisionShape(tableToVector3df(size));
+        NewtonBody *body = createDynamicBody(shape, mass);
+        NewtonBodySetUserData(body, entity);
+        NewtonInvalidateCache(newtonWorld);
+
+        entity->setBody(body);
+    }
+
+    void addForce(const std::string name, LuaTable vec) {
+        Entity *entity = entities[name];
+        NewtonBody *body = entity->getBody();
+
+        dVector forceVec = tableToDvector(vec);
+
+        NewtonBodyAddForce(body, &forceVec[0]);
+    }
+
+    void addImpulse(const std::string name, LuaTable vec) {
+        Entity *entity = entities[name];
+        NewtonBody *body = entity->getBody();
+
+        dVector forceVec = tableToDvector(vec);
+        dVector center;
+
+        NewtonBodyGetCentreOfMass(body, &center[0]);
+
+        NewtonBodyAddImpulse(body, &forceVec[0], &center[0]);
+    }
+
+    void handleFrame(float dt) {
         auto handler = luaState.GetGlobalEnvironment().Get<LuaFunction<void(void)>>("handleFrame");
 
+        updatePhysics(dt);
         setKeyStates();
 
         handler.Invoke();
+    }
+
+    void handleExit() {
+        stopPhysics();
     }
 
     void loadScript(const std::string filename) {
@@ -347,39 +562,21 @@ int main() {
         const f32 frameDeltaTime = (f32) (now - then) / 1000.f; // Time in seconds
         then = now;
 
-        /* Check if keys W, S, A or D are being held down, and move the
-        sphere node around respectively. */
-        /*core::vector3df nodePosition = node->getPosition();
-
-        if (receiver.IsKeyDown(irr::KEY_KEY_W))
-            nodePosition.Y += MOVEMENT_SPEED * frameDeltaTime;
-        else if (receiver.IsKeyDown(irr::KEY_KEY_S))
-            nodePosition.Y -= MOVEMENT_SPEED * frameDeltaTime;
-
-        if (receiver.IsKeyDown(irr::KEY_KEY_A))
-            nodePosition.X -= MOVEMENT_SPEED * frameDeltaTime;
-        else if (receiver.IsKeyDown(irr::KEY_KEY_D))
-            nodePosition.X += MOVEMENT_SPEED * frameDeltaTime;
-
-        node->setPosition(nodePosition);*/
-
         driver->beginScene(true, true, video::SColor(255, 113, 113, 133));
 
         smgr->drawAll(); // draw the 3d scene
         device->getGUIEnvironment()->drawAll(); // draw the gui environment (the logo)
-        scriptMgr->handleFrame(); // run scripts handling frame being rendered
+
+        scriptMgr->handleFrame(frameDeltaTime); // run scripts handling frame being rendered
 
         driver->endScene();
 
         int fps = driver->getFPS();
 
         if (lastFPS != fps) {
-            core::stringw tmp(L"Movement Example - Irrlicht Engine [");
-            tmp += driver->getName();
-            tmp += L"] fps: ";
-            tmp += fps;
+            std::string title = fmt::sprintf("Newtonian Physics [{0} FPS]", fps);
 
-            device->setWindowCaption(tmp.c_str());
+            device->setWindowCaption((const wchar_t *) title.c_str());
             lastFPS = fps;
         }
     }
@@ -388,6 +585,9 @@ int main() {
     In the end, delete the Irrlicht device.
     */
     device->drop();
+
+    scriptMgr->handleExit();
+    delete scriptMgr;
 
     return 0;
 }

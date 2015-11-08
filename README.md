@@ -8,16 +8,23 @@ creating models and embedding scripts.
 
 ## Changelog
 
+**9 Nov 2015** Added basic NewtonGD stuff to the program.
+
 **8 Nov 2015** Lua scripting is added to the program and all the interaction logic is moved there.
 
 **7 Nov 2015** Sample Irrlicht program is compiled. Project is made using CMake build system.
+
+## TODO
+
+* Fix starting position/rotation for bodies when creating them
+* Fix impulse/force applying
 
 ## Step-by-step
 
 1. download Irrlicht 1.8.3
 2. unzip Irrlicht & go to its' `/source/Irrlicht` subdirectory in terminal
 3. run `make`
-4. install `lua-dev` and `cmake` packages for your system
+4. install `cmake lua-dev tinyxml-dev glew-dev openal-dev enet-dev` packages for your system
 5. go to the project directory, create the `build` sub-dir, navigate there and run 
 
         cmake .. -DIRRLICHT_PATH=PATH_TO_IRRLICHT_GOES_HERE 
@@ -82,3 +89,10 @@ build everything with a single CMake run. To make it happen, all you need is onl
     # ...
     
     target_link_libraries(${EXECUTABLE_NAME} luacppinterface)
+    
+### Newton bits
+
+There is no more `GetIdentityMatrix()` - it was replaced with `dGetIdentityMatrix()`.
+There's also no more need to set `m_w` for `dVector` instances - it has the default value of `1.0`.
+You can not multiply a `dVector` by a number - you have to call `vector.Scale(x)` to do this.
+There are no `NewtonSetPlatformArchitecture` and `NewtonSetWorldSize` anymore.

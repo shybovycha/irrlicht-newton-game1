@@ -1,3 +1,8 @@
 build
 irrlicht_newton_game1
 .idea
+source/newton-dynamics-master/applications
+source/newton-dynamics-master/packages/projects
+source/newton-dynamics-master/packages/thirdParty
+source/newton-dynamics-master/coreLibrary_300/projects
+
