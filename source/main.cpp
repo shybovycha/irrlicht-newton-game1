@@ -36,35 +36,11 @@ irr::IEventReceiver::OnEvent(). This method will be called by the engine once
 when an event happens. What we really want to know is whether a key is being
 held down, and so we will remember the current state of each key.
 */
-class MyEventReceiver : public IEventReceiver {
-public:
-    // This is the one method that we have to implement
-    virtual bool OnEvent(const SEvent &event) {
-        // Remember whether each key is down or up
-        if (event.EventType == irr::EET_KEY_INPUT_EVENT)
-            KeyIsDown[event.KeyInput.Key] = event.KeyInput.PressedDown;
-
-        return false;
-    }
-
-    // This is used to check whether a key is being held down
-    virtual bool IsKeyDown(EKEY_CODE keyCode) const {
-        return KeyIsDown[keyCode];
-    }
-
-    MyEventReceiver() {
-        for (u32 i = 0; i < KEY_KEY_CODES_COUNT; ++i)
-            KeyIsDown[i] = false;
-    }
-
-private:
-    // We use this array to store the current state of each key
-    bool KeyIsDown[KEY_KEY_CODES_COUNT];
-};
 
 class ScriptManager {
 private:
     Lua luaState;
+    std::map<int, bool> keyStates;
     std::map<std::string, scene::ISceneNode *> nodes;
     video::IVideoDriver *driver;
     scene::ISceneManager *smgr;
@@ -90,6 +66,9 @@ private:
         auto setScale = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable scale) -> void { setNodeScale(name, scale); });
 
+        auto move = luaState.CreateFunction<void(std::string, LuaTable)>(
+                [&](std::string name, LuaTable delta) -> void { moveNode(name, delta); });
+
         auto addCircleAnimator = luaState.CreateFunction<void(std::string, LuaTable, float)>(
                 [&](std::string name, LuaTable center, float radius) -> void {
                     addNodeCircleAnimator(name, center, radius);
@@ -105,8 +84,24 @@ private:
         global.Set("setRotation", setRotation);
         global.Set("setScale", setScale);
 
+        global.Set("move", move);
+
         global.Set("addCircleAnimator", addCircleAnimator);
         global.Set("addForwardAnimator", addForwardAnimator);
+    }
+
+    void setGlobalVariables() {
+        setKeyStates();
+    }
+
+    void setKeyStates() {
+        LuaTable keysTable = luaState.CreateTable();
+
+        for (auto &kv : keyStates) {
+            keysTable.Set(kv.first, kv.second);
+        }
+
+        luaState.GetGlobalEnvironment().Set("KEY_STATE", keysTable);
     }
 
     scene::ISceneNode *findNode(std::string name) {
@@ -210,6 +205,20 @@ public:
         node->setPosition(vec);
     }
 
+    void moveNode(const std::string name, LuaTable pos) {
+        scene::ISceneNode *node = findNode(name);
+        core::vector3df vec = tableToVector3df(pos);
+
+        core::matrix4 m;
+
+        core::vector3df rot = node->getRotation();
+        m.setRotationDegrees(rot);
+
+        m.transformVect(vec);
+        node->setPosition(node->getPosition() + vec);
+        node->updateAbsolutePosition();
+    }
+
     void setNodeRotation(const std::string name, LuaTable rot) {
         scene::ISceneNode *node = findNode(name);
         core::vector3df vec = tableToVector3df(rot);
@@ -231,14 +240,52 @@ public:
         return vector3dfToTable(node->getPosition());
     }
 
+    void handleFrame() {
+        auto handler = luaState.GetGlobalEnvironment().Get<LuaFunction<void(void)>>("handleFrame");
+
+        setKeyStates();
+
+        handler.Invoke();
+    }
+
     void loadScript(const std::string filename) {
         std::ifstream inf(filename);
         std::string code((std::istreambuf_iterator<char>(inf)), std::istreambuf_iterator<char>());
 
         bindFunctions();
+        setGlobalVariables();
 
         luaState.RunScript(code);
+
+        auto scriptMainFn = luaState.GetGlobalEnvironment().Get<LuaFunction<void(void)>>("main");
+        scriptMainFn.Invoke();
     }
+
+    void setKeyState(int key, bool state) {
+        keyStates[key] = state;
+    }
+};
+
+class MyEventReceiver : public IEventReceiver {
+public:
+    MyEventReceiver(ScriptManager *scriptManager) {
+        scriptMgr = scriptManager;
+
+        for (u32 i = 0; i < KEY_KEY_CODES_COUNT; ++i)
+            scriptMgr->setKeyState(i, false);
+    }
+
+    // This is the one method that we have to implement
+    virtual bool OnEvent(const SEvent &event) {
+        // Remember whether each key is down or up
+        if (event.EventType == irr::EET_KEY_INPUT_EVENT)
+            scriptMgr->setKeyState(event.KeyInput.Key, event.KeyInput.PressedDown);
+
+        return false;
+    }
+
+private:
+    ScriptManager *scriptMgr;
 };
 
 /*
@@ -249,11 +296,8 @@ create some other additional scene nodes, to show that there are also some
 different possibilities to move and animate scene nodes.
 */
 int main() {
-    // create device
-    MyEventReceiver receiver;
-
     IrrlichtDevice *device = createDevice(video::EDT_OPENGL,
-                                          core::dimension2d<u32>(640, 480), 16, false, false, false, &receiver);
+                                          core::dimension2d<u32>(640, 480), 16, false, false, false);
 
     if (device == 0)
         return 1; // could not create selected driver.
@@ -262,6 +306,10 @@ int main() {
     scene::ISceneManager *smgr = device->getSceneManager();
 
     ScriptManager *scriptMgr = new ScriptManager(smgr, driver);
+
+    MyEventReceiver receiver(scriptMgr);
+
+    device->setEventReceiver(&receiver);
 
     scriptMgr->loadScript("media/scripts/test1.lua");
 
@@ -319,6 +367,7 @@ int main() {
 
         smgr->drawAll(); // draw the 3d scene
         device->getGUIEnvironment()->drawAll(); // draw the gui environment (the logo)
+        scriptMgr->handleFrame(); // run scripts handling frame being rendered
 
         driver->endScene();
 

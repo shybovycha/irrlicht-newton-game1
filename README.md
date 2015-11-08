@@ -1,9 +1,31 @@
+# Newton GD for Irrlicht game developers
+
+## Briefing
+
+This repo contains the code for Irrlicht + Newton game tutorial. It starts from building 
+a sample Irrlicht program, then goes through the whole game development process, including
+creating models and embedding scripts.
+
+## Changelog
+
+**8 Nov 2015** Lua scripting is added to the program and all the interaction logic is moved there.
+
+**7 Nov 2015** Sample Irrlicht program is compiled. Project is made using CMake build system.
+
 ## Step-by-step
 
 1. download Irrlicht 1.8.3
 2. unzip Irrlicht & go to its' `/source/Irrlicht` subdirectory in terminal
 3. run `make`
-4. install lua-dev package for your system
+4. install `lua-dev` and `cmake` packages for your system
+5. go to the project directory, create the `build` sub-dir, navigate there and run 
+
+        cmake .. -DIRRLICHT_PATH=PATH_TO_IRRLICHT_GOES_HERE 
+        make
+        cp -r ../media/ . 
+        ./irrlicht_newton_game1 
+
+    replacing `PATH_TO_IRRLICHT_GOES_HERE` with the base directory of your Irrlicht SDK.
 
 ## Important hints
 
