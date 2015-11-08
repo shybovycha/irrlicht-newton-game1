@@ -7,8 +7,10 @@ set(SOURCE_FILES source/main.cpp)
 set(EXECUTABLE_NAME irrlicht_newton_game1)
 
 set(LUACPPINTERFACE_PATH source/luacppinterface-master)
+set(CPPFORMAT_PATH source/cppformat-master)
 
 add_subdirectory(${LUACPPINTERFACE_PATH})
+add_subdirectory(${CPPFORMAT_PATH})
 
 find_package(X11)
 find_package(OpenGL)
@@ -24,12 +26,16 @@ if (NOT IRRLICHT_LIBRARY_PATH)
     message(STATUS "Found Irrlicht: ${IRRLICHT_LIBRARY_PATH}")
 endif()
 
-include_directories(${IRRLICHT_PATH}/include ${LUA_INCLUDE_DIR} ${LUACPPINTERFACE_PATH}/include)
+include_directories(${IRRLICHT_PATH}/include
+        ${LUA_INCLUDE_DIR}
+        ${LUACPPINTERFACE_PATH}/include
+        ${CPPFORMAT_PATH})
 
 add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 
 target_link_libraries(${EXECUTABLE_NAME}
         luacppinterface
+        cppformat
         ${IRRLICHT_LIBRARY_PATH}
         ${X11_LIBRARIES}
         ${OPENGL_LIBRARIES}

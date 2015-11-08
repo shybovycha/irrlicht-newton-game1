@@ -17,13 +17,14 @@ and tell the linker to link with the .lib file.
 #pragma comment(lib, "Irrlicht.lib")
 #endif
 
-#include <stdio.h>
 #include <fstream>
 #include <irrlicht.h>
 #include <map>
 #include <sstream>
 #include <iostream>
+
 #include "luacppinterface-master/include/luacppinterface.h"
+#include "cppformat-master/format.h"
 
 using namespace irr;
 
@@ -72,8 +73,44 @@ private:
         LuaTable global = luaState.GetGlobalEnvironment();
 
         auto createSphere = luaState.CreateFunction<void(std::string, std::string)>([&](std::string name, std::string tex) -> void { createSphereNode(name, tex); });
+        auto createCube = luaState.CreateFunction<void(std::string, std::string)>([&](std::string name, std::string tex) -> void { createCubeNode(name, tex); });
+
+        auto setPosition = luaState.CreateFunction<void(std::string, LuaTable)>([&](std::string name, LuaTable pos) -> void { setNodePosition(name, pos); });
+        auto addCircleAnimator = luaState.CreateFunction<void(std::string, LuaTable, float)>([&](std::string name, LuaTable center, float radius) -> void { addNodeCircleAnimator(name, center, radius); });
 
         global.Set("createSphere", createSphere);
+        global.Set("createCube", createCube);
+
+        global.Set("setPosition", setPosition);
+        global.Set("addCircleAnimator", addCircleAnimator);
+    }
+
+    scene::ISceneNode* findNode(std::string name) {
+        scene::ISceneNode *node = nodes[name];
+
+        if (!node) {
+            throw fmt::format("Could not find node {1}", name);
+        }
+
+        return node;
+    }
+
+    core::vector3df tableToVector3df(LuaTable pos) {
+        float x = pos.Get<float>("x"),
+            y = pos.Get<float>("y"),
+            z = pos.Get<float>("z");
+
+        return core::vector3df(x, y, z);
+    }
+
+    LuaTable vector3dfToTable(core::vector3df pos) {
+        LuaTable table = luaState.CreateTable();
+
+        table.Set<float>("x", pos.X);
+        table.Set<float>("y", pos.Y);
+        table.Set<float>("z", pos.Z);
+
+        return table;
     }
 
 public:
@@ -86,7 +123,6 @@ public:
         scene::ISceneNode *node = smgr->addSphereSceneNode();
 
         if (node) {
-            node->setPosition(core::vector3df(0, 0, 30));
             node->setMaterialTexture(0, driver->getTexture(textureFile.c_str()));
             node->setMaterialFlag(video::EMF_LIGHTING, false);
         }
@@ -94,28 +130,39 @@ public:
         nodes[name] = node;
     }
 
-    void createCubeNode(const std::string name, const std::string textureFile) {}
+    void createCubeNode(const std::string name, const std::string textureFile) {
+        scene::ISceneNode *node = smgr->addCubeSceneNode();
+
+        if (node) {
+            node->setMaterialTexture(0, driver->getTexture(textureFile.c_str()));
+            node->setMaterialFlag(video::EMF_LIGHTING, false);
+        }
+
+        nodes[name] = node;
+    }
+
+    void addNodeCircleAnimator(const std::string name, LuaTable center, float radius) {
+        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNodeAnimator *anim = smgr->createFlyCircleAnimator(tableToVector3df(center), radius);
+
+        if (anim) {
+            node->addAnimator(anim);
+            anim->drop();
+        }
+    }
 
     void setNodePosition(const std::string name, LuaTable pos) {
-        float x, y, z;
+        scene::ISceneNode *node = findNode(name);
+        core::vector3df vec = tableToVector3df(pos);
 
-        x = pos.Get<float>("x");
-        y = pos.Get<float>("y");
-        z = pos.Get<float>("z");
-
-        nodes[name]->setPosition(core::vector3df(x, y, z));
+        node->setPosition(vec);
     }
 
     LuaTable getNodePosition(const std::string name) {
         LuaTable pos = luaState.CreateTable();
+        scene::ISceneNode *node = findNode(name);
 
-        core::vector3df v = nodes[name]->getPosition();
-
-        pos.Set("x", v.X);
-        pos.Set("y", v.Y);
-        pos.Set("z", v.Z);
-
-        return pos;
+        return vector3dfToTable(node->getPosition());
     }
 
     void loadScript(const std::string filename) {
@@ -151,28 +198,6 @@ int main() {
     ScriptManager *scriptMgr = new ScriptManager(smgr, driver);
 
     scriptMgr->loadScript("media/scripts/test1.lua");
-
-    /*
-    Now we create another node, movable using a scene node animator. Scene
-    node animators modify scene nodes and can be attached to any scene node
-    like mesh scene nodes, billboards, lights and even camera scene nodes.
-    Scene node animators are not only able to modify the position of a
-    scene node, they can also animate the textures of an object for
-    example. We create a cube scene node and attach a 'fly circle' scene
-    node animator to it, letting this node fly around our sphere scene node.
-    */
-    scene::ISceneNode *n = smgr->addCubeSceneNode();
-
-    if (n) {
-        n->setMaterialTexture(0, driver->getTexture("../../media/t351sml.jpg"));
-        n->setMaterialFlag(video::EMF_LIGHTING, false);
-        scene::ISceneNodeAnimator *anim =
-                smgr->createFlyCircleAnimator(core::vector3df(0, 0, 30), 20.0f);
-        if (anim) {
-            n->addAnimator(anim);
-            anim->drop();
-        }
-    }
 
     /*
     The last scene node we add to show possibilities of scene node animators is
