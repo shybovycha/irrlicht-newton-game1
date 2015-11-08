@@ -65,27 +65,51 @@ private:
 class ScriptManager {
 private:
     Lua luaState;
-    std::map<std::string, scene::ISceneNode*> nodes;
+    std::map<std::string, scene::ISceneNode *> nodes;
     video::IVideoDriver *driver;
     scene::ISceneManager *smgr;
 
     void bindFunctions() {
         LuaTable global = luaState.GetGlobalEnvironment();
 
-        auto createSphere = luaState.CreateFunction<void(std::string, std::string)>([&](std::string name, std::string tex) -> void { createSphereNode(name, tex); });
-        auto createCube = luaState.CreateFunction<void(std::string, std::string)>([&](std::string name, std::string tex) -> void { createCubeNode(name, tex); });
+        auto createSphere = luaState.CreateFunction<void(std::string, std::string)>(
+                [&](std::string name, std::string tex) -> void { createSphereNode(name, tex); });
 
-        auto setPosition = luaState.CreateFunction<void(std::string, LuaTable)>([&](std::string name, LuaTable pos) -> void { setNodePosition(name, pos); });
-        auto addCircleAnimator = luaState.CreateFunction<void(std::string, LuaTable, float)>([&](std::string name, LuaTable center, float radius) -> void { addNodeCircleAnimator(name, center, radius); });
+        auto createCube = luaState.CreateFunction<void(std::string, std::string)>(
+                [&](std::string name, std::string tex) -> void { createCubeNode(name, tex); });
+
+        auto createAnimatedMesh = luaState.CreateFunction<void(std::string, std::string, std::string, int, int, int)>(
+                [&](std::string name, std::string model, std::string texture, int frameFrom, int frameTo, int animSpeed) -> void { createAnimatedNode(name, model, texture, frameFrom, frameTo, animSpeed); });
+
+        auto setPosition = luaState.CreateFunction<void(std::string, LuaTable)>(
+                [&](std::string name, LuaTable pos) -> void { setNodePosition(name, pos); });
+
+        auto setRotation = luaState.CreateFunction<void(std::string, LuaTable)>(
+                [&](std::string name, LuaTable rot) -> void { setNodeRotation(name, rot); });
+
+        auto setScale = luaState.CreateFunction<void(std::string, LuaTable)>(
+                [&](std::string name, LuaTable scale) -> void { setNodeScale(name, scale); });
+
+        auto addCircleAnimator = luaState.CreateFunction<void(std::string, LuaTable, float)>(
+                [&](std::string name, LuaTable center, float radius) -> void {
+                    addNodeCircleAnimator(name, center, radius);
+                });
+
+        auto addForwardAnimator = luaState.CreateFunction<void(std::string, LuaTable, LuaTable, int, bool)>([&](std::string name, LuaTable from, LuaTable to, int animationTime, bool loop) -> void { addNodeForwardAnimator(name, from, to, animationTime, loop); });
 
         global.Set("createSphere", createSphere);
         global.Set("createCube", createCube);
+        global.Set("createAnimatedMesh", createAnimatedMesh);
 
         global.Set("setPosition", setPosition);
+        global.Set("setRotation", setRotation);
+        global.Set("setScale", setScale);
+
         global.Set("addCircleAnimator", addCircleAnimator);
+        global.Set("addForwardAnimator", addForwardAnimator);
     }
 
-    scene::ISceneNode* findNode(std::string name) {
+    scene::ISceneNode *findNode(std::string name) {
         scene::ISceneNode *node = nodes[name];
 
         if (!node) {
@@ -97,8 +121,8 @@ private:
 
     core::vector3df tableToVector3df(LuaTable pos) {
         float x = pos.Get<float>("x"),
-            y = pos.Get<float>("y"),
-            z = pos.Get<float>("z");
+                y = pos.Get<float>("y"),
+                z = pos.Get<float>("z");
 
         return core::vector3df(x, y, z);
     }
@@ -111,6 +135,13 @@ private:
         table.Set<float>("z", pos.Z);
 
         return table;
+    }
+
+    void addAnimator(scene::ISceneNode *node, scene::ISceneNodeAnimator *anim) {
+        if (anim) {
+            node->addAnimator(anim);
+            anim->drop();
+        }
     }
 
 public:
@@ -141,14 +172,35 @@ public:
         nodes[name] = node;
     }
 
+    void createAnimatedNode(const std::string name, const std::string modelFile, const std::string textureFile,
+                            unsigned int framesFrom, unsigned int framesTo, unsigned int animationSpeed) {
+        scene::IAnimatedMeshSceneNode *node = smgr->addAnimatedMeshSceneNode(smgr->getMesh(modelFile.c_str()));
+
+        node->setMaterialFlag(video::EMF_LIGHTING, false);
+
+        node->setFrameLoop(framesFrom, framesTo);
+        node->setAnimationSpeed(animationSpeed);
+        // node->setMD2Animation(scene::EMAT_RUN);
+
+        node->setMaterialTexture(0, driver->getTexture(textureFile.c_str()));
+
+        nodes[name] = node;
+    }
+
     void addNodeCircleAnimator(const std::string name, LuaTable center, float radius) {
         scene::ISceneNode *node = findNode(name);
         scene::ISceneNodeAnimator *anim = smgr->createFlyCircleAnimator(tableToVector3df(center), radius);
 
-        if (anim) {
-            node->addAnimator(anim);
-            anim->drop();
-        }
+        addAnimator(node, anim);
+    }
+
+    void addNodeForwardAnimator(const std::string name, LuaTable from, LuaTable to, unsigned int animationTime,
+                                bool loop) {
+        scene::ISceneNode *node = findNode(name);
+        scene::ISceneNodeAnimator *anim = smgr->createFlyStraightAnimator(tableToVector3df(from), tableToVector3df(to),
+                                                                          animationTime, loop);
+
+        addAnimator(node, anim);
     }
 
     void setNodePosition(const std::string name, LuaTable pos) {
@@ -156,6 +208,20 @@ public:
         core::vector3df vec = tableToVector3df(pos);
 
         node->setPosition(vec);
+    }
+
+    void setNodeRotation(const std::string name, LuaTable rot) {
+        scene::ISceneNode *node = findNode(name);
+        core::vector3df vec = tableToVector3df(rot);
+
+        node->setRotation(vec);
+    }
+
+    void setNodeScale(const std::string name, LuaTable scale) {
+        scene::ISceneNode *node = findNode(name);
+        core::vector3df vec = tableToVector3df(scale);
+
+        node->setScale(vec);
     }
 
     LuaTable getNodePosition(const std::string name) {
@@ -200,47 +266,6 @@ int main() {
     scriptMgr->loadScript("media/scripts/test1.lua");
 
     /*
-    The last scene node we add to show possibilities of scene node animators is
-    a b3d model, which uses a 'fly straight' animator to run between to points.
-    */
-    scene::IAnimatedMeshSceneNode *anms =
-            smgr->addAnimatedMeshSceneNode(smgr->getMesh("../../media/ninja.b3d"));
-
-    if (anms) {
-        scene::ISceneNodeAnimator *anim =
-                smgr->createFlyStraightAnimator(core::vector3df(100, 0, 60),
-                                                core::vector3df(-100, 0, 60), 3500, true);
-        if (anim) {
-            anms->addAnimator(anim);
-            anim->drop();
-        }
-
-        /*
-        To make the model look right we disable lighting, set the
-        frames between which the animation should loop, rotate the
-        model around 180 degrees, and adjust the animation speed and
-        the texture. To set the right animation (frames and speed), we
-        would also be able to just call
-        "anms->setMD2Animation(scene::EMAT_RUN)" for the 'run'
-        animation instead of "setFrameLoop" and "setAnimationSpeed",
-        but this only works with MD2 animations, and so you know how to
-        start other animations. But a good advice is to not use
-        hardcoded frame-numbers...
-        */
-        anms->setMaterialFlag(video::EMF_LIGHTING, false);
-
-        anms->setFrameLoop(0, 13);
-        anms->setAnimationSpeed(15);
-//      anms->setMD2Animation(scene::EMAT_RUN);
-
-        anms->setScale(core::vector3df(2.f, 2.f, 2.f));
-        anms->setRotation(core::vector3df(0, -90, 0));
-//      anms->setMaterialTexture(0, driver->getTexture("../../media/sydney.bmp"));
-
-    }
-
-
-    /*
     To be able to look at and move around in this scene, we create a first
     person shooter style camera and make the mouse cursor invisible.
     */
@@ -251,12 +276,8 @@ int main() {
     Add a colorful irrlicht logo
     */
     device->getGUIEnvironment()->addImage(
-            driver->getTexture("../../media/irrlichtlogoalpha2.tga"),
+            driver->getTexture("media/textures/irrlichtlogoalpha2.tga"),
             core::position2d<s32>(10, 20));
-
-    gui::IGUIStaticText *diagnostics = device->getGUIEnvironment()->addStaticText(
-            L"", core::rect<s32>(10, 10, 400, 20));
-    diagnostics->setOverrideColor(video::SColor(255, 255, 255, 0));
 
     /*
     We have done everything, so lets draw it. We also write the current
