@@ -10,7 +10,7 @@ function handleFrame()
 --    end
 
     if KEY_STATE[0x20] == true then
-        addImpulse("sphere1", {0, 20, 0})
+        addImpulse("sphere1", {0, 10, 0})
     end
 end
 
@@ -20,7 +20,9 @@ function main()
     setPosition("sphere1", { x = 0, y = 0, z = 30 })
 
     createCube("cube1", "media/textures/t351sml.jpg")
-    addCircleAnimator("cube1", { x = 0, y = 0, z = 30 }, 20.0)
+    setScale("cube1", { 100, 0.1, 100 })
+    setPosition("cube1", { 0, -10, 0 })
+    createBoxBody("cube1", { 100, 0.1, 100 }, 0)
 
     createAnimatedMesh("ninja", "media/models/ninja.b3d", "media/textures/nskinbl.jpg", 0, 13, 15)
     setRotation("ninja", { x = 0, y = -90, z = 0 })

@@ -73,45 +73,45 @@ private:
     void bindFunctions() {
         LuaTable global = luaState.GetGlobalEnvironment();
 
-        auto createSphere = luaState.CreateFunction<void(std::string, std::string)>(
+        auto createSphereFn = luaState.CreateFunction<void(std::string, std::string)>(
                 [&](std::string name, std::string tex) -> void { createSphereNode(name, tex); });
 
-        auto createCube = luaState.CreateFunction<void(std::string, std::string)>(
+        auto createCubeFn = luaState.CreateFunction<void(std::string, std::string)>(
                 [&](std::string name, std::string tex) -> void { createCubeNode(name, tex); });
 
-        auto createAnimatedMesh = luaState.CreateFunction<void(std::string, std::string, std::string, int, int, int)>(
+        auto createAnimatedMeshFn = luaState.CreateFunction<void(std::string, std::string, std::string, int, int, int)>(
                 [&](std::string name, std::string model, std::string texture, int frameFrom, int frameTo,
                     int animSpeed) -> void {
                     createAnimatedNode(name, model, texture, frameFrom, frameTo, animSpeed);
                 });
 
-        auto setPosition = luaState.CreateFunction<void(std::string, LuaTable)>(
+        auto setPositionFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable pos) -> void { setNodePosition(name, pos); });
 
-        auto setRotation = luaState.CreateFunction<void(std::string, LuaTable)>(
+        auto setRotationFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable rot) -> void { setNodeRotation(name, rot); });
 
-        auto setScale = luaState.CreateFunction<void(std::string, LuaTable)>(
+        auto setScaleFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable scale) -> void { setNodeScale(name, scale); });
 
-        auto move = luaState.CreateFunction<void(std::string, LuaTable)>(
+        auto moveFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable delta) -> void { moveNode(name, delta); });
 
-        auto addCircleAnimator = luaState.CreateFunction<void(std::string, LuaTable, float)>(
+        auto addCircleAnimatorFn = luaState.CreateFunction<void(std::string, LuaTable, float)>(
                 [&](std::string name, LuaTable center, float radius) -> void {
                     addNodeCircleAnimator(name, center, radius);
                 });
 
-        auto addForwardAnimator = luaState.CreateFunction<void(std::string, LuaTable, LuaTable, int, bool)>(
+        auto addForwardAnimatorFn = luaState.CreateFunction<void(std::string, LuaTable, LuaTable, int, bool)>(
                 [&](std::string name, LuaTable from, LuaTable to, int animationTime,
                     bool loop) -> void { addNodeForwardAnimator(name, from, to, animationTime, loop); });
 
-        auto createSphereBody = luaState.CreateFunction<void(std::string, float, float)>(
+        auto createSphereBodyFn = luaState.CreateFunction<void(std::string, float, float)>(
                 [&](std::string name, float radius, float mass) ->
-                        void { createSphereBodyForNode(name, radius, mass); });
+                        void { createSphereBody(name, radius, mass); });
 
-        auto createBoxBody = luaState.CreateFunction<void(std::string, LuaTable, float)>(
-                [&](std::string name, LuaTable size, float mass) -> void { createBoxBodyForNode(name, size, mass); });
+        auto createBoxBodyFn = luaState.CreateFunction<void(std::string, LuaTable, float)>(
+                [&](std::string name, LuaTable size, float mass) -> void { createBoxBody(name, size, mass); });
 
         auto addForceFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable vec) -> void { addForce(name, vec); });
@@ -119,21 +119,21 @@ private:
         auto addImpulseFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable vec) -> void { addImpulse(name, vec); });
 
-        global.Set("createSphere", createSphere);
-        global.Set("createCube", createCube);
-        global.Set("createAnimatedMesh", createAnimatedMesh);
+        global.Set("createSphere", createSphereFn);
+        global.Set("createCube", createCubeFn);
+        global.Set("createAnimatedMesh", createAnimatedMeshFn);
 
-        global.Set("setPosition", setPosition);
-        global.Set("setRotation", setRotation);
-        global.Set("setScale", setScale);
+        global.Set("setPosition", setPositionFn);
+        global.Set("setRotation", setRotationFn);
+        global.Set("setScale", setScaleFn);
 
-        global.Set("move", move);
+        global.Set("move", moveFn);
 
-        global.Set("addCircleAnimator", addCircleAnimator);
-        global.Set("addForwardAnimator", addForwardAnimator);
+        global.Set("addCircleAnimator", addCircleAnimatorFn);
+        global.Set("addForwardAnimator", addForwardAnimatorFn);
 
-        global.Set("createSphereBody", createSphereBody);
-        global.Set("createBoxBody", createBoxBody);
+        global.Set("createSphereBody", createSphereBodyFn);
+        global.Set("createBoxBody", createBoxBodyFn);
 
         global.Set("addForce", addForceFn);
         global.Set("addImpulse", addImpulseFn);
@@ -165,7 +165,7 @@ private:
 
     core::vector3df tableToVector3df(LuaTable pos) {
         if (pos.GetTypeOfValueAt("x") == LuaType::nil) {
-            return core::vector3df(pos.Get<float>(0), pos.Get<float>(1), pos.Get<float>(2));
+            return core::vector3df(pos.Get<float>(1), pos.Get<float>(2), pos.Get<float>(3));
         } else {
             return core::vector3df(pos.Get<float>("x"), pos.Get<float>("y"), pos.Get<float>("z"));
         }
@@ -183,7 +183,7 @@ private:
 
     dVector tableToDvector(LuaTable vec) {
         if (vec.GetTypeOfValueAt("x") == LuaType::nil) {
-            return dVector(vec.Get<float>(0), vec.Get<float>(1), vec.Get<float>(2));
+            return dVector(vec.Get<float>(1), vec.Get<float>(2), vec.Get<float>(3));
         } else {
             return dVector(vec.Get<float>("x"), vec.Get<float>("y"), vec.Get<float>("z"));
         }
@@ -407,22 +407,28 @@ public:
         return vector3dfToTable(node->getPosition());
     }
 
-    void createSphereBodyForNode(const std::string name, float radius, float mass) {
+    void createSphereBody(const std::string name, float radius, float mass) {
         Entity *entity = entities[name];
 
         NewtonCollision *shape = createSphereCollisionShape(radius);
-        NewtonBody *body = createDynamicBody(shape, mass);
+        NewtonBody *body;
+
+        body = createDynamicBody(shape, mass);
+
         NewtonBodySetUserData(body, entity);
         NewtonInvalidateCache(newtonWorld);
 
         entity->setBody(body);
     }
 
-    void createBoxBodyForNode(const std::string name, LuaTable size, float mass) {
+    void createBoxBody(const std::string name, LuaTable size, float mass) {
         Entity *entity = entities[name];
 
         NewtonCollision *shape = createBoxCollisionShape(tableToVector3df(size));
-        NewtonBody *body = createDynamicBody(shape, mass);
+        NewtonBody *body;
+
+        body = createDynamicBody(shape, mass);
+
         NewtonBodySetUserData(body, entity);
         NewtonInvalidateCache(newtonWorld);
 
