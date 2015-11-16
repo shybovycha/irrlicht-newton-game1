@@ -223,6 +223,14 @@ private:
         dMatrix offset(dGetIdentityMatrix());
         offset.m_posit = origin;
 
+        // dQuaternion q(node->getRotation().X, node->getRotation().Y, node->getRotation().Z, 1.f);
+        // dVector v(node->getPosition().X, node->getPosition().Y, node->getPosition().Z);
+        // dMatrix matrix(q, v);
+
+        // NewtonConvexCollisionCalculateInertialMatrix(collision, &inertia[0], &origin[0]);
+        // NewtonBodySetMassMatrix(body, mass, mass * inertia.m_x, mass * inertia.m_y, mass * inertia.m_z);
+        // NewtonBodySetCentreOfMass(body, &origin[0]);
+
         int shapeId = 0;
 
         return NewtonCreateBox(newtonWorld, size.m_x, size.m_y, size.m_z, shapeId, &offset[0][0]);
