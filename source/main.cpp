@@ -584,15 +584,6 @@ int main() {
         scriptMgr->handleFrame(frameDeltaTime); // run scripts handling frame being rendered
 
         driver->endScene();
-
-        int fps = driver->getFPS();
-
-        if (lastFPS != fps) {
-            std::string title = fmt::sprintf("Newtonian Physics [{0} FPS]", fps);
-
-            device->setWindowCaption((const wchar_t *) title.c_str());
-            lastFPS = fps;
-        }
     }
 
     /*

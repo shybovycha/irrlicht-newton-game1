@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(irrlicht_newton_game1)
 
-if (APPLE)
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-framework Cocoa -framework IOKit")
-endif()
+# if (APPLE)
+#     set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-framework Foundation -framework OpenGL -framework Cocoa -framework Carbon -framework AppKit -framework IOKit")
+# endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -78,7 +78,15 @@ include_directories(${IRRLICHT_PATH}/include
 set(SOURCE_FILES source/main.cpp)
 set(EXECUTABLE_NAME irrlicht_newton_game1)
 
-add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
+if (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework Foundation -framework OpenGL -framework Cocoa -framework Carbon -framework AppKit -framework IOKit")
+endif()
+
+if (APPLE)
+    add_executable(${EXECUTABLE_NAME} MACOSX_BUNDLE ${SOURCE_FILES})
+else()
+    add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
+endif()
 
 target_link_libraries(${EXECUTABLE_NAME}
         ${LIBRARIES})
