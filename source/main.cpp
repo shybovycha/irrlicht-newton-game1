@@ -85,6 +85,9 @@ private:
                     createAnimatedNode(name, model, texture, frameFrom, frameTo, animSpeed);
                 });
 
+        auto createMeshFn = luaState.CreateFunction<void(std::string, std::string)>(
+                [&](std::string name, std::string tex) -> void { createMeshNode(name, tex); });
+
         auto setPositionFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable pos) -> void { setNodePosition(name, pos); });
 
@@ -122,6 +125,7 @@ private:
         global.Set("createSphere", createSphereFn);
         global.Set("createCube", createCubeFn);
         global.Set("createAnimatedMesh", createAnimatedMeshFn);
+        global.Set("createMesh", createMeshFn);
 
         global.Set("setPosition", setPositionFn);
         global.Set("setRotation", setRotationFn);
@@ -196,51 +200,38 @@ private:
         }
     }
 
-//    NewtonCollision* createSphereCollisionShape(float radius, scene::ISceneNode *node) {
-    NewtonCollision* createSphereCollisionShape(float radius) {
-//        core::vector3df position = node->getPosition();
-//        core::vector3df center = (core::vector3df(radius, radius, radius) * 0.5f) + position;
-        core::vector3df center = (core::vector3df(radius, radius, radius) * 0.5f);
-        dVector origin(center.X, center.Y, center.Z);
-
-        dMatrix offset(dGetIdentityMatrix());
-        offset.m_posit = origin;
+    NewtonCollision* createSphereCollisionShape(scene::ISceneNode *node, float radius) {
+        dQuaternion q(node->getRotation().X, node->getRotation().Y, node->getRotation().Z, 1.f);
+        dVector v(node->getPosition().X, node->getPosition().Y, node->getPosition().Z);
+        dMatrix origin(q, v);
 
         int shapeId = 0;
 
-        return NewtonCreateSphere(newtonWorld, radius, shapeId, &offset[0][0]);
+        return NewtonCreateSphere(newtonWorld, radius, shapeId, &origin[0][0]);
     }
 
-    NewtonCollision* createBoxCollisionShape(core::vector3df shapeSize) {
-        //    NewtonCollision* createBoxCollisionShape(core::vector3df shapeSize, scene::ISceneNode *node) {
+    NewtonCollision* createBoxCollisionShape(scene::ISceneNode *node, core::vector3df shapeSize) {
         dVector size(shapeSize.X, shapeSize.Y, shapeSize.Z);
 
-//        core::vector3df position = node->getPosition();
-//        core::vector3df center = (shapeSize * 0.5f + position);
-        core::vector3df center = (shapeSize * 0.5f);
-        dVector origin(center.X, center.Y, center.Z);
+        core::vector3df center = node->getPosition() + (shapeSize);
 
-        dMatrix offset(dGetIdentityMatrix());
-        offset.m_posit = origin;
-
-        // dQuaternion q(node->getRotation().X, node->getRotation().Y, node->getRotation().Z, 1.f);
-        // dVector v(node->getPosition().X, node->getPosition().Y, node->getPosition().Z);
-        // dMatrix matrix(q, v);
-
-        // NewtonConvexCollisionCalculateInertialMatrix(collision, &inertia[0], &origin[0]);
-        // NewtonBodySetMassMatrix(body, mass, mass * inertia.m_x, mass * inertia.m_y, mass * inertia.m_z);
-        // NewtonBodySetCentreOfMass(body, &origin[0]);
+        dQuaternion q(node->getRotation().X, node->getRotation().Y, node->getRotation().Z, 1.f);
+        dVector v(center.X, center.Y, center.Z);
+        dMatrix origin(q, v);
 
         int shapeId = 0;
 
-        return NewtonCreateBox(newtonWorld, size.m_x, size.m_y, size.m_z, shapeId, &offset[0][0]);
+        return NewtonCreateBox(newtonWorld, size.m_x, size.m_y, size.m_z, shapeId, &origin[0][0]);
     }
 
     NewtonBody* createDynamicBody(NewtonCollision* shape, float mass) {
-        dMatrix matrix(dGetIdentityMatrix());
-        NewtonBody *body = NewtonCreateDynamicBody(newtonWorld, shape, &matrix[0][0]);
+        dMatrix origin;
+        NewtonCollisionGetMatrix(shape, &origin[0][0]);
+        NewtonBody *body = NewtonCreateDynamicBody(newtonWorld, shape, &origin[0][0]);
 
-        NewtonBodySetMassProperties(body, mass, shape);
+        NewtonBodySetMassMatrix(body, mass, mass, mass, mass);
+        NewtonBodySetCentreOfMass(body, &origin[0][0]);
+
         NewtonDestroyCollision(shape);
 
         NewtonBodySetTransformCallback(body, transformCallback);
@@ -325,6 +316,14 @@ public:
             node->setMaterialTexture(0, driver->getTexture(textureFile.c_str()));
             node->setMaterialFlag(video::EMF_LIGHTING, false);
         }
+
+        entities[name] = new Entity(node);
+    }
+
+    void createMeshNode(const std::string name, const std::string modelFile) {
+        scene::ISceneNode *node = smgr->addMeshSceneNode(smgr->getMesh(modelFile.c_str()));
+
+        node->setMaterialFlag(video::EMF_LIGHTING, true);
 
         entities[name] = new Entity(node);
     }
@@ -418,7 +417,7 @@ public:
     void createSphereBody(const std::string name, float radius, float mass) {
         Entity *entity = entities[name];
 
-        NewtonCollision *shape = createSphereCollisionShape(radius);
+        NewtonCollision *shape = createSphereCollisionShape(entity->getSceneNode(), radius);
         NewtonBody *body;
 
         body = createDynamicBody(shape, mass);
@@ -432,7 +431,7 @@ public:
     void createBoxBody(const std::string name, LuaTable size, float mass) {
         Entity *entity = entities[name];
 
-        NewtonCollision *shape = createBoxCollisionShape(tableToVector3df(size));
+        NewtonCollision *shape = createBoxCollisionShape(entity->getSceneNode(), tableToVector3df(size));
         NewtonBody *body;
 
         body = createDynamicBody(shape, mass);
@@ -464,6 +463,37 @@ public:
         NewtonBodyAddImpulse(body, &forceVec[0], &center[0]);
     }
 
+    void drawPhysicsDebug() {
+        for (auto& kv : entities) {
+            Entity *entity = kv.second;
+
+            if (!entity->getBody())
+                continue;
+
+            NewtonCollision *shape = NewtonBodyGetCollision(entity->getBody());
+
+            dMatrix offset = dGetIdentityMatrix();
+
+            dVector bodyPos;
+            NewtonBodyGetPosition(entity->getBody(), &bodyPos[0]);
+
+            dVector minBodyBBox, maxBodyBBox;
+            NewtonCollisionCalculateAABB(shape, &offset[0][0], &minBodyBBox[0], &maxBodyBBox[0]);
+
+            core::vector3df pos(bodyPos.m_x, bodyPos.m_y, bodyPos.m_z);
+
+            core::vector3df minBBox = core::vector3df(minBodyBBox.m_x, minBodyBBox.m_y, minBodyBBox.m_z) + pos;
+            core::vector3df maxBBox = core::vector3df(maxBodyBBox.m_x, maxBodyBBox.m_y, maxBodyBBox.m_z) + pos;
+
+            video::SMaterial mat;
+            mat.Lighting = false;
+            driver->setMaterial(mat);
+
+            driver->setTransform(video::ETS_WORLD, core::matrix4());
+            driver->draw3DBox(core::aabbox3d<f32>(minBBox, maxBBox), video::SColor(255, 0, 255, 0));
+        }
+    }
+
     void handleFrame(float dt) {
         auto handler = luaState.GetGlobalEnvironment().Get<LuaFunction<void(void)>>("handleFrame");
 
@@ -471,6 +501,8 @@ public:
         setKeyStates();
 
         handler.Invoke();
+
+        drawPhysicsDebug();
     }
 
     void handleExit() {

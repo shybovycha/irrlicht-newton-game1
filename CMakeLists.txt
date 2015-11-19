@@ -1,22 +1,18 @@
 cmake_minimum_required(VERSION 3.1)
 project(irrlicht_newton_game1)
 
-# if (APPLE)
-#     set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-framework Foundation -framework OpenGL -framework Cocoa -framework Carbon -framework AppKit -framework IOKit")
-# endif()
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 option("NEWTON_DEMOS_SANDBOX" "Build demos sandbox" OFF)
 
+set(IRRLICHT_PATH source/irrlicht-1.8.3)
 set(LUACPPINTERFACE_PATH source/luacppinterface-master)
 set(CPPFORMAT_PATH source/cppformat-master)
 set(NEWTONGD_PATH source/newton-dynamics-master)
 set(NEWTONGD_INCLUDE_DIRS
         ${NEWTONGD_PATH}/packages/dCustomJoints
         ${NEWTONGD_PATH}/packages/dContainers
-        ${NEWTONGD_PATH}/packages/dMath
-        )
+        ${NEWTONGD_PATH}/packages/dMath)
 
 set(NEWTON_LIBRARIES Newton dMath)
 
@@ -79,7 +75,11 @@ set(SOURCE_FILES source/main.cpp)
 set(EXECUTABLE_NAME irrlicht_newton_game1)
 
 if (APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -framework Foundation -framework OpenGL -framework Cocoa -framework Carbon -framework AppKit -framework IOKit")
+    find_library(IOKIT NAMES IOKit)
+    find_library(OpenGL NAMES OpenGL)
+    find_library(COREVIDEO NAMES CoreVideo)
+    find_library(COCOA NAMES Cocoa)
+    SET(LIBRARIES ${LIBRARIES} ${IOKIT} ${COREVIDEO} ${COCOA})
 endif()
 
 if (APPLE)
@@ -88,5 +88,4 @@ else()
     add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 endif()
 
-target_link_libraries(${EXECUTABLE_NAME}
-        ${LIBRARIES})
+target_link_libraries(${EXECUTABLE_NAME} ${LIBRARIES})
