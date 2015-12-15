@@ -10,16 +10,18 @@ function handleFrame()
 --    end
 
     if KEY_STATE[0x20] == true then
-        addImpulse("sphere1", {0, 10, 0})
+        addImpulse("sphere1", {0, 0.25, 0})
     end
 end
 
 function main()
     createMesh("colliseum", "media/models/coliseum.3ds")
+    createMeshBody("colliseum")
 
     createSphere("sphere1", "media/textures/wall.bmp")
-    createSphereBody("sphere1", 10.0, 10.0)
-    setPosition("sphere1", { x = 0, y = 0, z = 30 })
+    setScale("sphere1", { 0.5, 0.5, 0.5 })
+    createSphereBody("sphere1", 2.5, 15.0)
+    setPosition("sphere1", { x = 0, y = 20, z = 10 })
 
     createCube("cube1", "media/textures/t351sml.jpg")
     setPosition("cube1", { 0, -10, 0 })

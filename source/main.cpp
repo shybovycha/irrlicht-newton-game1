@@ -40,21 +40,30 @@ class Entity {
 private:
     scene::ISceneNode *mNode;
     NewtonBody *mBody;
+    dVector summaryForce;
 
 public:
-    Entity(scene::ISceneNode *node) : mNode(node), mBody(0) {}
-    Entity(scene::ISceneNode *node, NewtonBody *body) : mNode(node), mBody(body) {}
+    Entity(scene::ISceneNode *node) : mNode(node), mBody(0), summaryForce(dVector(0, 0, 0)) {}
+    Entity(scene::ISceneNode *node, NewtonBody *body) : mNode(node), mBody(body), summaryForce(dVector(0, 0, 0)) {}
 
-    scene::ISceneNode* getSceneNode() {
+    scene::ISceneNode* getSceneNode() const {
         return mNode;
     }
 
-    NewtonBody* getBody() {
+    NewtonBody* getBody() const {
         return mBody;
     }
 
     void setBody(NewtonBody *body) {
         mBody = body;
+    }
+
+    void addForce(dVector force) {
+        summaryForce += force;
+    }
+
+    dVector getSummaryForce() const {
+        return summaryForce;
     }
 };
 
@@ -116,6 +125,10 @@ private:
         auto createBoxBodyFn = luaState.CreateFunction<void(std::string, LuaTable, float)>(
                 [&](std::string name, LuaTable size, float mass) -> void { createBoxBody(name, size, mass); });
 
+        auto createMeshBodyFn = luaState.CreateFunction<void(std::string)>(
+                [&](std::string name) -> void { createMeshBody(name); });
+
+
         auto addForceFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable vec) -> void { addForce(name, vec); });
 
@@ -138,6 +151,7 @@ private:
 
         global.Set("createSphereBody", createSphereBodyFn);
         global.Set("createBoxBody", createBoxBodyFn);
+        global.Set("createMeshBody", createMeshBodyFn);
 
         global.Set("addForce", addForceFn);
         global.Set("addImpulse", addImpulseFn);
@@ -229,7 +243,9 @@ private:
         NewtonCollisionGetMatrix(shape, &origin[0][0]);
         NewtonBody *body = NewtonCreateDynamicBody(newtonWorld, shape, &origin[0][0]);
 
-        NewtonBodySetMassMatrix(body, mass, mass, mass, mass);
+        dVector inertia;
+        NewtonConvexCollisionCalculateInertialMatrix(shape, &inertia[0], &origin[0][0]);
+        NewtonBodySetMassMatrix(body, mass, mass * inertia.m_x, mass * inertia.m_y, mass * inertia.m_z);
         NewtonBodySetCentreOfMass(body, &origin[0][0]);
 
         NewtonDestroyCollision(shape);
@@ -267,13 +283,10 @@ private:
 
     static void applyForceAndTorqueCallback(const NewtonBody* body, dFloat timestep, int threadIndex)
     {
-        dFloat Ixx, Iyy, Izz;
-        dFloat mass;
+        Entity* entity = (Entity*) NewtonBodyGetUserData(body);
 
-        NewtonBodyGetMassMatrix(body, &mass, &Ixx, &Iyy, &Izz);
-
-        dVector gravityForce(0.0f, mass * -9.8f, 0.0f, 1.0f);
-        NewtonBodySetForce(body, &gravityForce[0]);
+        dVector force = entity->getSummaryForce() + dVector(0, -9.8f, 0);
+        NewtonBodySetForce(body, &force[0]);
     }
 
     void initPhysics() {
@@ -288,6 +301,66 @@ private:
     void stopPhysics() {
         NewtonDestroyAllBodies(newtonWorld);
         NewtonDestroy(newtonWorld);
+    }
+
+    void trimeshFromStandardVertices(irr::scene::IMeshBuffer* meshBuffer, NewtonCollision* treeCollision, irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
+        irr::core::vector3df vArray[3];
+
+        irr::video::S3DVertex* mb_vertices = (irr::video::S3DVertex*) meshBuffer->getVertices();
+
+        u16* mb_indices  = meshBuffer->getIndices();
+
+        for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
+            int v1i = mb_indices[j + 0];
+            int v2i = mb_indices[j + 1];
+            int v3i = mb_indices[j + 2];
+
+            vArray[0] = mb_vertices[v1i].Pos * scale.X;
+            vArray[1] = mb_vertices[v2i].Pos * scale.Y;
+            vArray[2] = mb_vertices[v3i].Pos * scale.Z;
+
+            NewtonTreeCollisionAddFace(treeCollision, 3, &vArray[0].X, sizeof(irr::core::vector3df), 1);
+        }
+    }
+
+    void trimeshFrom2TCoordVertices(irr::scene::IMeshBuffer* meshBuffer, NewtonCollision* treeCollision, irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
+        irr::core::vector3df vArray[3];
+
+        irr::video::S3DVertex2TCoords* mb_vertices = (irr::video::S3DVertex2TCoords*) meshBuffer->getVertices();
+
+        u16* mb_indices  = meshBuffer->getIndices();
+
+        for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
+            int v1i = mb_indices[j + 0];
+            int v2i = mb_indices[j + 1];
+            int v3i = mb_indices[j + 2];
+
+            vArray[0] = mb_vertices[v1i].Pos * scale.X;
+            vArray[1] = mb_vertices[v2i].Pos * scale.Y;
+            vArray[2] = mb_vertices[v3i].Pos * scale.Z;
+
+            NewtonTreeCollisionAddFace(treeCollision, 3, &vArray[0].X, sizeof(irr::core::vector3df), 1);
+        }
+    }
+
+    void trimeshFromTangentVertices(irr::scene::IMeshBuffer* meshBuffer, NewtonCollision* treeCollision, irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
+        irr::core::vector3df vArray[3];
+
+        irr::video::S3DVertexTangents* mb_vertices = (irr::video::S3DVertexTangents*) meshBuffer->getVertices();
+
+        u16* mb_indices  = meshBuffer->getIndices();
+
+        for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
+            int v1i = mb_indices[j + 0];
+            int v2i = mb_indices[j + 1];
+            int v3i = mb_indices[j + 2];
+
+            vArray[0] = mb_vertices[v1i].Pos * scale.X;
+            vArray[1] = mb_vertices[v2i].Pos * scale.Y;
+            vArray[2] = mb_vertices[v3i].Pos * scale.Z;
+
+            NewtonTreeCollisionAddFace(treeCollision, 3, &vArray[0].X, sizeof(irr::core::vector3df), 1);
+        }
     }
 
 public:
@@ -442,6 +515,48 @@ public:
         entity->setBody(body);
     }
 
+    void createMeshBody(const std::string name) {
+        Entity *entity = entities[name];
+        irr::scene::IMeshSceneNode *node = (irr::scene::IMeshSceneNode*) entity->getSceneNode();
+        NewtonCollision *treeCollision;
+        treeCollision = NewtonCreateTreeCollision(newtonWorld, 0);
+        NewtonTreeCollisionBeginBuild(treeCollision);
+
+        irr::scene::IMesh *mesh = node->getMesh();
+
+        for (unsigned int i = 0; i < mesh->getMeshBufferCount(); i++) {
+            irr::scene::IMeshBuffer *mb = mesh->getMeshBuffer(i);
+
+            switch(mb->getVertexType()) {
+                case irr::video::EVT_STANDARD:
+                    trimeshFromStandardVertices(mb, treeCollision, node->getScale());
+                    break;
+
+                case irr::video::EVT_2TCOORDS:
+                    trimeshFrom2TCoordVertices(mb, treeCollision, node->getScale());
+                    break;
+
+                case irr::video::EVT_TANGENTS:
+                    trimeshFromTangentVertices(mb, treeCollision, node->getScale());
+                    break;
+
+                default:
+                    printf("Newton error: Unknown vertex type in static mesh: %d\n", mb->getVertexType());
+            }
+        }
+
+        NewtonTreeCollisionEndBuild(treeCollision, 1);
+
+        NewtonBody* body;
+
+        body = createDynamicBody(treeCollision, 0.0);
+
+        NewtonBodySetUserData(body, entity);
+        NewtonInvalidateCache(newtonWorld);
+
+        entity->setBody(body);
+    }
+
     void addForce(const std::string name, LuaTable vec) {
         Entity *entity = entities[name];
         NewtonBody *body = entity->getBody();
@@ -453,14 +568,21 @@ public:
 
     void addImpulse(const std::string name, LuaTable vec) {
         Entity *entity = entities[name];
+
         NewtonBody *body = entity->getBody();
-
         dVector forceVec = tableToDvector(vec);
-        dVector center;
 
+        dMatrix matrix = dGetIdentityMatrix();
+        NewtonBodyGetMatrix(body, &matrix[0][0]);
+
+        dVector center;
         NewtonBodyGetCentreOfMass(body, &center[0]);
 
-        NewtonBodyAddImpulse(body, &forceVec[0], &center[0]);
+        dVector globalPoint;
+        matrix.RotateVector(forceVec);
+        globalPoint = matrix.TransformVector(dVector(0, 0, 0));
+
+        NewtonBodyAddImpulse(body, &forceVec[0], &globalPoint[0]);
     }
 
     void drawPhysicsDebug() {
@@ -511,6 +633,11 @@ public:
 
     void loadScript(const std::string filename) {
         std::ifstream inf(filename);
+
+        if (!inf.good()) {
+            throw fmt::format("Could not find script `{0}`", filename);
+        }
+
         std::string code((std::istreambuf_iterator<char>(inf)), std::istreambuf_iterator<char>());
 
         bindFunctions();
@@ -578,8 +705,10 @@ int main() {
     To be able to look at and move around in this scene, we create a first
     person shooter style camera and make the mouse cursor invisible.
     */
-    smgr->addCameraSceneNodeFPS();
+    irr::scene::ICameraSceneNode* camera = smgr->addCameraSceneNodeFPS();
     device->getCursorControl()->setVisible(false);
+
+    camera->setPosition(irr::core::vector3df(0, 10.0, -140.0f));
 
     /*
     Add a colorful irrlicht logo
@@ -588,24 +717,14 @@ int main() {
             driver->getTexture("media/textures/irrlichtlogoalpha2.tga"),
             core::position2d<s32>(10, 20));
 
-    /*
-    We have done everything, so lets draw it. We also write the current
-    frames per second and the name of the driver to the caption of the
-    window.
-    */
-    int lastFPS = -1;
-
     // In order to do framerate independent movement, we have to know
     // how long it was since the last frame
     u32 then = device->getTimer()->getTime();
 
-    // This is the movemen speed in units per second.
-    const f32 MOVEMENT_SPEED = 5.f;
-
     while (device->run()) {
         // Work out a frame delta time.
         const u32 now = device->getTimer()->getTime();
-        const f32 frameDeltaTime = (f32) (now - then) / 1000.f; // Time in seconds
+        const f32 frameDeltaTime = (f32) (now - then);
         then = now;
 
         driver->beginScene(true, true, video::SColor(255, 113, 113, 133));
