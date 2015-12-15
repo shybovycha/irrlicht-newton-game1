@@ -43,14 +43,15 @@ private:
     dVector summaryForce;
 
 public:
-    Entity(scene::ISceneNode *node) : mNode(node), mBody(0), summaryForce(dVector(0, 0, 0)) {}
-    Entity(scene::ISceneNode *node, NewtonBody *body) : mNode(node), mBody(body), summaryForce(dVector(0, 0, 0)) {}
+    Entity(scene::ISceneNode *node) : mNode(node), mBody(0), summaryForce(dVector(0, 0, 0)) { }
 
-    scene::ISceneNode* getSceneNode() const {
+    Entity(scene::ISceneNode *node, NewtonBody *body) : mNode(node), mBody(body), summaryForce(dVector(0, 0, 0)) { }
+
+    scene::ISceneNode *getSceneNode() const {
         return mNode;
     }
 
-    NewtonBody* getBody() const {
+    NewtonBody *getBody() const {
         return mBody;
     }
 
@@ -72,7 +73,7 @@ private:
     Lua luaState;
 
     std::map<int, bool> keyStates;
-    std::map<std::string, Entity*> entities;
+    std::map<std::string, Entity *> entities;
 
     irr::IrrlichtDevice *device;
     video::IVideoDriver *driver;
@@ -95,8 +96,10 @@ private:
                     createAnimatedNode(name, model, texture, frameFrom, frameTo, animSpeed);
                 });
 
-        auto createMeshFn = luaState.CreateFunction<void(std::string, std::string)>(
-                [&](std::string name, std::string tex) -> void { createMeshNode(name, tex); });
+        auto createMeshFn = luaState.CreateFunction<void(std::string, std::string, std::string)>(
+                [&](std::string name, std::string filename, std::string texture) -> void {
+                    createMeshNode(name, filename, texture);
+                });
 
         auto setPositionFn = luaState.CreateFunction<void(std::string, LuaTable)>(
                 [&](std::string name, LuaTable pos) -> void { setNodePosition(name, pos); });
@@ -185,7 +188,8 @@ private:
         luaState.GetGlobalEnvironment().Set("KEY_PAUSE", 0x13); // PAUSE key
         luaState.GetGlobalEnvironment().Set("KEY_CAPITAL", 0x14); // CAPS LOCK key
         luaState.GetGlobalEnvironment().Set("KEY_KANA", 0x15); // IME Kana mode
-        luaState.GetGlobalEnvironment().Set("KEY_HANGUEL", 0x15); // IME Hanguel mode (maintained for compatibility use KEY_HANGUL)
+        luaState.GetGlobalEnvironment().Set("KEY_HANGUEL",
+                                            0x15); // IME Hanguel mode (maintained for compatibility use KEY_HANGUL)
         luaState.GetGlobalEnvironment().Set("KEY_HANGUL", 0x15); // IME Hangul mode
         luaState.GetGlobalEnvironment().Set("KEY_JUNJA", 0x17); // IME Junja mode
         luaState.GetGlobalEnvironment().Set("KEY_FINAL", 0x18); // IME final mode
@@ -334,8 +338,8 @@ private:
         luaState.GetGlobalEnvironment().Set("KEY_STATE", keysTable);
     }
 
-    Entity* findEntity(std::string name) {
-        Entity* entity = entities[name];
+    Entity *findEntity(std::string name) {
+        Entity *entity = entities[name];
 
         if (!entity) {
             throw fmt::format("Could not find entity `{0}`", name);
@@ -377,7 +381,7 @@ private:
         }
     }
 
-    NewtonCollision* createSphereCollisionShape(scene::ISceneNode *node, float radius) {
+    NewtonCollision *createSphereCollisionShape(scene::ISceneNode *node, float radius) {
         dQuaternion q(node->getRotation().X, node->getRotation().Y, node->getRotation().Z, 1.f);
         dVector v(node->getPosition().X, node->getPosition().Y, node->getPosition().Z);
         dMatrix origin(q, v);
@@ -387,7 +391,7 @@ private:
         return NewtonCreateSphere(newtonWorld, radius, shapeId, &origin[0][0]);
     }
 
-    NewtonCollision* createBoxCollisionShape(scene::ISceneNode *node, core::vector3df shapeSize) {
+    NewtonCollision *createBoxCollisionShape(scene::ISceneNode *node, core::vector3df shapeSize) {
         dVector size(shapeSize.X, shapeSize.Y, shapeSize.Z);
 
         core::vector3df center = node->getPosition() + (shapeSize);
@@ -401,7 +405,7 @@ private:
         return NewtonCreateBox(newtonWorld, size.m_x, size.m_y, size.m_z, shapeId, &origin[0][0]);
     }
 
-    NewtonBody* createDynamicBody(NewtonCollision* shape, float mass) {
+    NewtonBody *createDynamicBody(NewtonCollision *shape, float mass) {
         dMatrix origin;
         NewtonCollisionGetMatrix(shape, &origin[0][0]);
         NewtonBody *body = NewtonCreateDynamicBody(newtonWorld, shape, &origin[0][0]);
@@ -419,7 +423,7 @@ private:
         return body;
     }
 
-    NewtonBody* createKinematicBody(NewtonCollision* shape) {
+    NewtonBody *createKinematicBody(NewtonCollision *shape) {
         dMatrix matrix(dGetIdentityMatrix());
         NewtonBody *body = NewtonCreateKinematicBody(newtonWorld, shape, &matrix[0][0]);
 
@@ -429,13 +433,11 @@ private:
         return body;
     }
 
-    static void transformCallback(const NewtonBody* body, const dFloat* matrix, int threadIndex)
-    {
-        Entity *entity = (Entity*) NewtonBodyGetUserData(body);
-        scene::ISceneNode* node = entity->getSceneNode();
+    static void transformCallback(const NewtonBody *body, const dFloat *matrix, int threadIndex) {
+        Entity *entity = (Entity *) NewtonBodyGetUserData(body);
+        scene::ISceneNode *node = entity->getSceneNode();
 
-        if (node)
-        {
+        if (node) {
             core::matrix4 transform;
             transform.setM(matrix);
 
@@ -444,9 +446,8 @@ private:
         }
     }
 
-    static void applyForceAndTorqueCallback(const NewtonBody* body, dFloat timestep, int threadIndex)
-    {
-        Entity* entity = (Entity*) NewtonBodyGetUserData(body);
+    static void applyForceAndTorqueCallback(const NewtonBody *body, dFloat timestep, int threadIndex) {
+        Entity *entity = (Entity *) NewtonBodyGetUserData(body);
 
         dVector force = entity->getSummaryForce() + dVector(0, -9.8f, 0);
         NewtonBodySetForce(body, &force[0]);
@@ -458,7 +459,7 @@ private:
     }
 
     void updatePhysics(float dt) {
-         NewtonUpdate(newtonWorld, dt);
+        NewtonUpdate(newtonWorld, dt);
     }
 
     void stopPhysics() {
@@ -466,12 +467,13 @@ private:
         NewtonDestroy(newtonWorld);
     }
 
-    void trimeshFromStandardVertices(irr::scene::IMeshBuffer* meshBuffer, NewtonCollision* treeCollision, irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
+    void trimeshFromStandardVertices(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
+                                     irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
         irr::core::vector3df vArray[3];
 
-        irr::video::S3DVertex* mb_vertices = (irr::video::S3DVertex*) meshBuffer->getVertices();
+        irr::video::S3DVertex *mb_vertices = (irr::video::S3DVertex *) meshBuffer->getVertices();
 
-        u16* mb_indices  = meshBuffer->getIndices();
+        u16 *mb_indices = meshBuffer->getIndices();
 
         for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
             int v1i = mb_indices[j + 0];
@@ -486,12 +488,13 @@ private:
         }
     }
 
-    void trimeshFrom2TCoordVertices(irr::scene::IMeshBuffer* meshBuffer, NewtonCollision* treeCollision, irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
+    void trimeshFrom2TCoordVertices(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
+                                    irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
         irr::core::vector3df vArray[3];
 
-        irr::video::S3DVertex2TCoords* mb_vertices = (irr::video::S3DVertex2TCoords*) meshBuffer->getVertices();
+        irr::video::S3DVertex2TCoords *mb_vertices = (irr::video::S3DVertex2TCoords *) meshBuffer->getVertices();
 
-        u16* mb_indices  = meshBuffer->getIndices();
+        u16 *mb_indices = meshBuffer->getIndices();
 
         for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
             int v1i = mb_indices[j + 0];
@@ -506,12 +509,13 @@ private:
         }
     }
 
-    void trimeshFromTangentVertices(irr::scene::IMeshBuffer* meshBuffer, NewtonCollision* treeCollision, irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
+    void trimeshFromTangentVertices(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
+                                    irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
         irr::core::vector3df vArray[3];
 
-        irr::video::S3DVertexTangents* mb_vertices = (irr::video::S3DVertexTangents*) meshBuffer->getVertices();
+        irr::video::S3DVertexTangents *mb_vertices = (irr::video::S3DVertexTangents *) meshBuffer->getVertices();
 
-        u16* mb_indices  = meshBuffer->getIndices();
+        u16 *mb_indices = meshBuffer->getIndices();
 
         for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
             int v1i = mb_indices[j + 0];
@@ -557,10 +561,11 @@ public:
         entities[name] = new Entity(node);
     }
 
-    void createMeshNode(const std::string name, const std::string modelFile) {
+    void createMeshNode(const std::string name, const std::string modelFile, const std::string textureFile) {
         scene::ISceneNode *node = smgr->addMeshSceneNode(smgr->getMesh(modelFile.c_str()));
 
-        node->setMaterialFlag(video::EMF_LIGHTING, true);
+        node->setMaterialFlag(video::EMF_LIGHTING, false);
+        node->setMaterialTexture(0, driver->getTexture(textureFile.c_str()));
 
         entities[name] = new Entity(node);
     }
@@ -681,7 +686,7 @@ public:
 
     void createMeshBody(const std::string name) {
         Entity *entity = entities[name];
-        irr::scene::IMeshSceneNode *node = (irr::scene::IMeshSceneNode*) entity->getSceneNode();
+        irr::scene::IMeshSceneNode *node = (irr::scene::IMeshSceneNode *) entity->getSceneNode();
         NewtonCollision *treeCollision;
         treeCollision = NewtonCreateTreeCollision(newtonWorld, 0);
         NewtonTreeCollisionBeginBuild(treeCollision);
@@ -691,7 +696,7 @@ public:
         for (unsigned int i = 0; i < mesh->getMeshBufferCount(); i++) {
             irr::scene::IMeshBuffer *mb = mesh->getMeshBuffer(i);
 
-            switch(mb->getVertexType()) {
+            switch (mb->getVertexType()) {
                 case irr::video::EVT_STANDARD:
                     trimeshFromStandardVertices(mb, treeCollision, node->getScale());
                     break;
@@ -711,7 +716,7 @@ public:
 
         NewtonTreeCollisionEndBuild(treeCollision, 1);
 
-        NewtonBody* body;
+        NewtonBody *body;
 
         body = createDynamicBody(treeCollision, 0.0);
 
@@ -750,7 +755,7 @@ public:
     }
 
     void drawPhysicsDebug() {
-        for (auto& kv : entities) {
+        for (auto &kv : entities) {
             Entity *entity = kv.second;
 
             if (!entity->getBody())
@@ -873,7 +878,7 @@ int main() {
     To be able to look at and move around in this scene, we create a first
     person shooter style camera and make the mouse cursor invisible.
     */
-    irr::scene::ICameraSceneNode* camera = smgr->addCameraSceneNodeFPS();
+    irr::scene::ICameraSceneNode *camera = smgr->addCameraSceneNodeFPS();
     device->getCursorControl()->setVisible(false);
 
     camera->setPosition(irr::core::vector3df(0, 10.0, -140.0f));
@@ -892,7 +897,7 @@ int main() {
     while (device->run()) {
         // Work out a frame delta time.
         const u32 now = device->getTimer()->getTime();
-        const f32 frameDeltaTime = (f32) (now - then);
+        const f32 frameDeltaTime = (f32)(now - then);
         then = now;
 
         driver->beginScene(true, true, video::SColor(255, 113, 113, 133));

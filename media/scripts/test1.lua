@@ -21,7 +21,7 @@ function handleFrame()
 end
 
 function main()
-    createMesh("colliseum", "media/models/coliseum.3ds")
+    createMesh("colliseum", "media/models/ramp_floor.3ds", "media/models/ramp_floor.png")
     createMeshBody("colliseum")
 
     createSphere("sphere1", "media/textures/wall.bmp")
