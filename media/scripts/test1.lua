@@ -9,8 +9,14 @@ function handleFrame()
 --        move("sphere1", { x = 0, y = -1, z = 0 })
 --    end
 
-    if KEY_STATE[0x20] == true then
+    -- Space
+    if KEY_STATE[KEY_SPACE] == true then
         addImpulse("sphere1", {0, 0.25, 0})
+    end
+
+    -- Esc
+    if KEY_STATE[KEY_ESCAPE] == true then
+        exit()
     end
 end
 
