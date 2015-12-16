@@ -467,53 +467,21 @@ private:
         NewtonDestroy(newtonWorld);
     }
 
-    void trimeshFromStandardVertices(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
+    void createTrimeshShape(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
                                      irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
         irr::core::vector3df vArray[3];
 
+        switch (meshBuffer->getVertexType()) {
+            case irr::video::EVT_STANDARD:
+            case irr::video::EVT_2TCOORDS:
+            case irr::video::EVT_TANGENTS:
+                break;
+
+            default:
+                printf("Newton error: Unknown vertex type in static mesh: %d\n", meshBuffer->getVertexType());
+        }
+
         irr::video::S3DVertex *mb_vertices = (irr::video::S3DVertex *) meshBuffer->getVertices();
-
-        u16 *mb_indices = meshBuffer->getIndices();
-
-        for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
-            int v1i = mb_indices[j + 0];
-            int v2i = mb_indices[j + 1];
-            int v3i = mb_indices[j + 2];
-
-            vArray[0] = mb_vertices[v1i].Pos * scale.X;
-            vArray[1] = mb_vertices[v2i].Pos * scale.Y;
-            vArray[2] = mb_vertices[v3i].Pos * scale.Z;
-
-            NewtonTreeCollisionAddFace(treeCollision, 3, &vArray[0].X, sizeof(irr::core::vector3df), 1);
-        }
-    }
-
-    void trimeshFrom2TCoordVertices(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
-                                    irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
-        irr::core::vector3df vArray[3];
-
-        irr::video::S3DVertex2TCoords *mb_vertices = (irr::video::S3DVertex2TCoords *) meshBuffer->getVertices();
-
-        u16 *mb_indices = meshBuffer->getIndices();
-
-        for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
-            int v1i = mb_indices[j + 0];
-            int v2i = mb_indices[j + 1];
-            int v3i = mb_indices[j + 2];
-
-            vArray[0] = mb_vertices[v1i].Pos * scale.X;
-            vArray[1] = mb_vertices[v2i].Pos * scale.Y;
-            vArray[2] = mb_vertices[v3i].Pos * scale.Z;
-
-            NewtonTreeCollisionAddFace(treeCollision, 3, &vArray[0].X, sizeof(irr::core::vector3df), 1);
-        }
-    }
-
-    void trimeshFromTangentVertices(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
-                                    irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
-        irr::core::vector3df vArray[3];
-
-        irr::video::S3DVertexTangents *mb_vertices = (irr::video::S3DVertexTangents *) meshBuffer->getVertices();
 
         u16 *mb_indices = meshBuffer->getIndices();
 
@@ -695,23 +663,7 @@ public:
 
         for (unsigned int i = 0; i < mesh->getMeshBufferCount(); i++) {
             irr::scene::IMeshBuffer *mb = mesh->getMeshBuffer(i);
-
-            switch (mb->getVertexType()) {
-                case irr::video::EVT_STANDARD:
-                    trimeshFromStandardVertices(mb, treeCollision, node->getScale());
-                    break;
-
-                case irr::video::EVT_2TCOORDS:
-                    trimeshFrom2TCoordVertices(mb, treeCollision, node->getScale());
-                    break;
-
-                case irr::video::EVT_TANGENTS:
-                    trimeshFromTangentVertices(mb, treeCollision, node->getScale());
-                    break;
-
-                default:
-                    printf("Newton error: Unknown vertex type in static mesh: %d\n", mb->getVertexType());
-            }
+            createTrimeshShape(mb, treeCollision, node->getScale());
         }
 
         NewtonTreeCollisionEndBuild(treeCollision, 1);
