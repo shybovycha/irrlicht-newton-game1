@@ -30,9 +30,6 @@ and tell the linker to link with the .lib file.
 #include "newton-dynamics-master/packages/dMath/dVector.h"
 #include "newton-dynamics-master/packages/dMath/dMatrix.h"
 #include "newton-dynamics-master/packages/dMath/dQuaternion.h"
-/*#include "newton-dynamics-master/packages/dNewton/dNewton.h"
-#include "newton-dynamics-master/packages/dNewton/dNewtonCollision.h"
-#include "newton-dynamics-master/packages/dNewton/dNewtonDynamicBody.h"*/
 
 using namespace irr;
 
@@ -437,13 +434,14 @@ private:
         Entity *entity = (Entity *) NewtonBodyGetUserData(body);
         scene::ISceneNode *node = entity->getSceneNode();
 
-        if (node) {
-            core::matrix4 transform;
-            transform.setM(matrix);
+        if (!node)
+            return;
 
-            node->setPosition(transform.getTranslation());
-            node->setRotation(transform.getRotationDegrees());
-        }
+        core::matrix4 transform;
+        transform.setM(matrix);
+
+        node->setPosition(transform.getTranslation());
+        node->setRotation(transform.getRotationDegrees());
     }
 
     static void applyForceAndTorqueCallback(const NewtonBody *body, dFloat timestep, int threadIndex) {
@@ -655,8 +653,8 @@ public:
     void createMeshBody(const std::string name) {
         Entity *entity = entities[name];
         irr::scene::IMeshSceneNode *node = (irr::scene::IMeshSceneNode *) entity->getSceneNode();
-        NewtonCollision *treeCollision;
-        treeCollision = NewtonCreateTreeCollision(newtonWorld, 0);
+        NewtonCollision *treeCollision = NewtonCreateTreeCollision(newtonWorld, 0);
+
         NewtonTreeCollisionBeginBuild(treeCollision);
 
         irr::scene::IMesh *mesh = node->getMesh();
@@ -668,9 +666,7 @@ public:
 
         NewtonTreeCollisionEndBuild(treeCollision, 1);
 
-        NewtonBody *body;
-
-        body = createDynamicBody(treeCollision, 0.0);
+        NewtonBody *body = createDynamicBody(treeCollision, 0.0);
 
         NewtonBodySetUserData(body, entity);
         NewtonInvalidateCache(newtonWorld);
@@ -745,7 +741,7 @@ public:
 
         handler.Invoke();
 
-        drawPhysicsDebug();
+//        drawPhysicsDebug();
     }
 
     void handleExit() {
