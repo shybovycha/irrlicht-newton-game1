@@ -700,6 +700,8 @@ public:
         globalPoint = matrix.TransformVector(dVector(0, 0, 0));
 
         NewtonBodyAddImpulse(body, &forceVec[0], &globalPoint[0]);
+
+        // NewtonCollisionForEachPolygonDo(shape, )
     }
 
     void drawPhysicsDebug() {
