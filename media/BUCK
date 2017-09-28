@@ -1,0 +1,14 @@
+export_file(
+    name = "models",
+    visibility = [ "PUBLIC" ],
+)
+
+export_file(
+    name = "scripts",
+    visibility = [ "PUBLIC" ],
+)
+
+export_file(
+    name = "textures",
+    visibility = [ "PUBLIC" ],
+)

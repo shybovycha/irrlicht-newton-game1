@@ -19,20 +19,17 @@ creating models and embedding scripts.
 * Fix starting position/rotation for bodies when creating them
 * Fix impulse/force applying
 
-## Step-by-step
+## Step-by-step build
 
-1. download Irrlicht 1.8.3
-2. unzip Irrlicht & go to its' `/source/Irrlicht` subdirectory in terminal
-3. run `make`
-4. install `cmake lua-dev tinyxml-dev glew-dev openal-dev enet-dev` packages for your system
-5. go to the project directory, create the `build` sub-dir, navigate there and run 
+1. install `CMake`
+2. go to `source/lua` and run `cmake -H. -B_build && cmake --build _build --target install`
+3. go to `source/luacppinterface` and repeat the same command there
+4. go to `source` and run `cmake -H. -B_build && cmake --build _build`
+5. from the root directory of a project run:
 
-        cmake .. -DIRRLICHT_PATH=PATH_TO_IRRLICHT_GOES_HERE 
-        make
-        cp -r ../media/ . 
-        ./irrlicht_newton_game1 
-
-    replacing `PATH_TO_IRRLICHT_GOES_HERE` with the base directory of your Irrlicht SDK.
+        cmake -H. -B_build && cmake --build _build
+        cp -r ../media/ .
+        ./irrlicht_newton_game1
 
 ## Important hints
 

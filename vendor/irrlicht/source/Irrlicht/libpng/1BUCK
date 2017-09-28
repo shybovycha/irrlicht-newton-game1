@@ -1,0 +1,8 @@
+cxx_library(
+    name = "libpng",
+    srcs = glob([ "*.c" ]),
+    headers = glob([ "*.h" ]),
+    exported_headers = glob([ "*.h" ]),
+    header_namespace = "",
+    visibility = [ "PUBLIC" ],
+)
