@@ -22,9 +22,6 @@ cxx_library(
    headers = glob([
         "source/Irrlicht/jpeglib/*.h"
     ]),
-   platform_srcs = [
-      (".*osx.*", [ "source/Irrlicht/jpeglib/jmemmac.c" ])
-   ],
    exported_headers = subdir_glob([ ("source/Irrlicht/jpeglib", "*.h") ]),
    header_namespace = "",
    srcs = [
@@ -79,9 +76,6 @@ cxx_library(
    ],
    compiler_flags = [
         "-xc"
-   ],
-   platform_headers = [
-        (".*osx.*", [ "source/Irrlicht/jpeglib/jmemmac.c", ]),
    ],
 )
 
@@ -193,7 +187,6 @@ apple_library(
         "-DPNG_NO_MNG_FEATURES",
         "-fPIC",
     ],
-    # link_style = "static",
     visibility = [
         "PUBLIC"
     ],
@@ -234,5 +227,5 @@ apple_library(
     labels = [
         "in progress",
         "need to import that apple_library (:irrlicht-osx) when compiling for OSX"
-    ]
+    ],
 )

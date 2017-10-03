@@ -15,18 +15,32 @@ This repo contains the code for [Irrlicht + Newton game tutorial](http://shybovy
 
 * Fix starting position/rotation for bodies when creating them
 * Fix impulse/force applying
-* Fix OSX window focus
+* ~~Fix OSX window focus~~
+* Add automatic `media/` copying to the bundle/binary directory
+* Generalize build rules for different platforms
 
 ## Step-by-step build
 
-1. install [Buck](https://buckbuild.com/)
-2. from the root directory of a project run:
+1. install [Buck](https://buckbuild.com/) from master branch
+2. to build project, run the command from the project root directory
+    a. for OSX:
 
-        buck build //irrlicht-newton-game
+        buck build //irrlicht-newton-game:bundle-osx\#macosx-x86_64
 
-3. in order to run a demo, use
+    b. for Linux & others:
 
-        buck run //irrlicht-newton-game
+        buck build //irrlicht-newton-game:binary-generic
+
+3. copy the `media/` directory to the build directory
+4. run a demo with
+
+    a. for OSX:
+
+        buck run //irrlicht-newton-game:bundle-osx\#macosx-x86_64
+
+    b. for others:
+
+        buck run //irrlicht-newton-game:binary-generic
 
 ## Important hints
 

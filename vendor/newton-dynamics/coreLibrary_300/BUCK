@@ -1,30 +1,6 @@
-# cxx_library(
-#     name = "headers",
-#     headers = glob([
-#         "source/newton/*.h",
-#         "source/core/*.h",
-#         "source/physics/*.h",
-#         "source/meshUtil/*.h",
-#     ]),
-#     exported_headers = subdir_glob([
-#         ("source/newton", "*.h"),
-#         ("source/core", "*.h"),
-#         ("source/physics", "*.h"),
-#         ("source/meshUtil", "*.h"),
-#     ]),
-# )
-
-# cxx_precompiled_header(
-#     name = "NewtonStdAfx",
-#     src = "source/newton/NewtonStdAfx.h",
-#     deps = [
-#         ":headers",
-#     ],
-# )
 
 cxx_library(
     name = "coreLibrary_300",
-    # precompiled_header = ":NewtonStdAfx",
     headers = glob([
         "source/core/*.h",
         "source/physics/*.h",
@@ -56,14 +32,13 @@ cxx_library(
         "-funsafe-math-optimizations",
         "-fsingle-precision-constant"
     ],
+    visibility = [ "PUBLIC" ],
 )
 
 cxx_library(
     name = "NewtonStatic",
     deps = [ ":coreLibrary_300" ],
     exported_deps = [ ":coreLibrary_300" ],
-    # preferred_linkage = "static",
-    # link_style = "static",
     visibility = [ "PUBLIC" ],
 )
 
@@ -71,7 +46,5 @@ cxx_library(
     name = "Newton",
     deps = [ ":coreLibrary_300" ],
     exported_deps = [ ":coreLibrary_300" ],
-    # preferred_linkage = "shared",
-    # link_style = "shared",
     visibility = [ "PUBLIC" ],
 )

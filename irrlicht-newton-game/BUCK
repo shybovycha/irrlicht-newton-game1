@@ -1,58 +1,41 @@
-#cxx_precompiled_header(
-#    name = "stdafx",
-#    src = "stdafx.h",
-#    deps = [
-#        "//vendor/luacppinterface:luacppinterface",
-#        "//vendor/irrlicht:irrlicht",
-#        "//vendor/newton-dynamics:newton-dynamics",
-#    ],
-#    visibility = [ "PUBLIC" ],
-#)
-
-# prebuilt_cxx_library(
-#     name = "irrlicht",
-#     header_dirs = [ "" ]
-# )
-
-cxx_binary(
-    name = "irrlicht-newton-game",
+apple_binary(
+    name = "binary-osx",
     srcs = [ "main.cpp" ],
-    # precompiled_header = ":stdafx",
     deps = [
         "//vendor/luacppinterface:luacppinterface",
         "//vendor/irrlicht:irrlicht-osx",
         "//vendor/newton-dynamics:newton-dynamics",
-        "//vendor/tinyxml:tinyxml",
-        "//media:models",
-        "//media:scripts",
-        "//media:textures",
     ],
     compiler_flags = [
         "-std=c++11",
     ],
     link_style = "static",
-    # link_whole = True,
-    #compiler_flags = [],
-    #linker_flags = [
-    #    "-lirrlicht",
-    #    "-lluacppinterface",
-    #    "-ldMath",
-    #    "-ldScene",
-    #    "-ldAnimation",
-    #    "-ldContainers",
-    #    "-ldCustomJoints",
-    #    "-lNewtonStatic",
-    #],
-    # platform_linker_flags = [
-    #    (".*osx.*", [
-    #         "-lGL",
-    #         "-lstdc++",
-    #         "-lXxf86vm",
-    #         "-framework Foundation",
-    #         "-framework IOKit",
-    #         "-framework CoreVideo",
-    #         "-framework Cocoa",
-    #         "-framework OpenGL"
-    #     ])
-    # ],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/IOKit.framework",
+        "$SDKROOT/System/Library/Frameworks/OpenGL.framework",
+        "$SDKROOT/System/Library/Frameworks/Cocoa.framework",
+        "$SDKROOT/System/Library/Frameworks/CoreVideo.framework",
+    ],
+)
+
+apple_bundle(
+    name = "bundle-osx",
+    binary = ":binary-osx",
+    extension = "app",
+    info_plist = "Info.plist",
+    product_name = "irrlicht-newton-game",
+)
+
+cxx_binary(
+    name = "binary-generic",
+    srcs = [ "main.cpp" ],
+    deps = [
+        "//vendor/luacppinterface:luacppinterface",
+        "//vendor/irrlicht:irrlicht",
+        "//vendor/newton-dynamics:newton-dynamics",
+    ],
+    compiler_flags = [
+        "-std=c++11",
+    ],
+    link_style = "static",
 )
