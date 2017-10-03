@@ -1,0 +1,13 @@
+language: python
+
+before_script:
+  - mkdir -p shippable/codecoverage
+
+before_install:
+  - sudo pip install gcovr
+  - sudo pip install cpp-coveralls --use-mirrors
+
+script: 
+  - ./build-travis.sh
+  - ls
+  - cd LuaCppInterface && gcovr -r . --xml > ../shippable/codecoverage/coverage.xml

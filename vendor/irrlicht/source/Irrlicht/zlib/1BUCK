@@ -1,0 +1,8 @@
+cxx_library(
+    name = "zlib",
+    headers = glob([ "*.h" ]),
+    srcs = glob([ "*.c" ]),
+    exported_headers = glob([ "*.h" ]),
+    header_namespace = "",
+    visibility = [ "PUBLIC" ],
+)

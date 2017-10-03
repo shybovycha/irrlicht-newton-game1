@@ -11,3 +11,7 @@ irrlicht-1.8.3/doc
 irrlicht-1.8.3/examples
 irrlicht-1.8.3/media
 irrlicht-1.8.3/tools
+**/_build/
+buck-out
+*.o
+.buckd
