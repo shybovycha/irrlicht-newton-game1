@@ -495,7 +495,7 @@ CIrrDeviceMacOSX::CIrrDeviceMacOSX(const SIrrlichtCreationParameters& param)
 		if(!CreationParams.WindowId) //load menus if standalone application
 		{
 			[[NSAutoreleasePool alloc] init];
-			[NSApplication sharedApplication];
+			[[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
 			[NSApp setDelegate:(id<NSApplicationDelegate>)[[[AppDelegate alloc] initWithDevice:this] autorelease]];
 			[NSBundle loadNibNamed:@"MainMenu" owner:[NSApp delegate]];
 			[NSApp finishLaunching];
@@ -642,7 +642,7 @@ bool CIrrDeviceMacOSX::createWindow()
 						NSOpenGLPFASamples, (NSOpenGLPixelFormatAttribute)CreationParams.AntiAlias,
 						NSOpenGLPFAStencilSize, (NSOpenGLPixelFormatAttribute)(CreationParams.Stencilbuffer?1:0),
 						NSOpenGLPFADoubleBuffer,
-						(NSOpenGLPixelFormatAttribute)nil
+						0
 					};
 
 					if (CreationParams.AntiAlias<2)
@@ -668,7 +668,7 @@ bool CIrrDeviceMacOSX::createWindow()
 						{
 							// Third try without Doublebuffer
 							os::Printer::log("No doublebuffering available.", ELL_WARNING);
-							windowattribs[14]=(NSOpenGLPixelFormatAttribute)nil;
+							windowattribs[14]=0;
 						}
 
 						format = [[NSOpenGLPixelFormat alloc] initWithAttributes:windowattribs];

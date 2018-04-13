@@ -1,0 +1,16 @@
+filegroup(
+    name = "media",
+    srcs = glob([ './**/*' ], exclude = [ 'BUCK' ]),
+    visibility = [ 'PUBLIC' ]
+)
+
+apple_resource(
+    name = "media-osx-resource",
+    files = glob([
+        './**/*',
+    ]),
+    dirs = [
+        '.',
+    ],
+    visibility = [ 'PUBLIC' ],
+)

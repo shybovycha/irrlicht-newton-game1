@@ -21,7 +21,7 @@ cxx_library(
    name = "jpeglib",
    headers = glob([
         "source/Irrlicht/jpeglib/*.h"
-    ]),
+   ]),
    exported_headers = subdir_glob([ ("source/Irrlicht/jpeglib", "*.h") ]),
    header_namespace = "",
    srcs = [
@@ -83,7 +83,7 @@ cxx_library(
    name = "libpng",
    headers = glob([
         "source/Irrlicht/libpng/*.h",
-    ]),
+   ]),
    exported_headers = subdir_glob([ ("source/Irrlicht/libpng", "*.h") ]),
    header_namespace = "",
    srcs = glob([ "source/Irrlicht/libpng/*.c" ]),
@@ -96,7 +96,7 @@ cxx_library(
    name = "lzma",
    headers = glob([
         "source/Irrlicht/lzma/*.h",
-    ]),
+   ]),
    exported_headers = subdir_glob([ ("source/Irrlicht/lzma", "*.h") ]),
    header_namespace = "",
    srcs = glob([ "source/Irrlicht/lzma/*.c" ]),
@@ -119,7 +119,7 @@ cxx_library(
         "source/Irrlicht/zlib/zutil.h",
         "source/Irrlicht/zlib/zlib.h",
         "source/Irrlicht/zlib/zconf.h",
-    ]),
+   ]),
    exported_headers = [
         "source/Irrlicht/zlib/zlib.h",
         "source/Irrlicht/zlib/zconf.h",
@@ -136,12 +136,13 @@ cxx_library(
    headers = subdir_glob([
         ("include", "*.h"),
         ("source/Irrlicht/aesGladman", "*.h"),
-    ]),
+   ]),
    exported_headers = subdir_glob([ ("source/Irrlicht/aesGladman", "*.h") ]),
    header_namespace = "",
    srcs = glob([ "source/Irrlicht/aesGladman/*.cpp" ]),
    compiler_flags = [
-        "-xc++"
+        "-xc++",
+        "-Wno-narrowing",
    ]
 )
 
