@@ -23,8 +23,28 @@
 # )
 
 cxx_library(
+    name = "pthreads",
+    headers = subdir_glob([
+        ("source/pthreads.2", "pthread.h"),
+        ("source/pthreads.2", "implement.h"),
+        ("source/pthreads.2", "semaphore.h"),
+        ("source/pthreads.2", "sched.h"),
+    ]),
+    exported_headers = subdir_glob([
+        ("source/pthreads.2", "pthread.h"),
+    ]),
+    header_namespace = "",
+    srcs = glob([
+        "source/pthreads.2/pthread.c",
+    ]),
+)
+
+cxx_library(
     name = "coreLibrary_300",
     # precompiled_header = ":NewtonStdAfx",
+    deps = [
+        ":pthreads",
+    ],
     headers = glob([
         "source/core/*.h",
         "source/physics/*.h",
