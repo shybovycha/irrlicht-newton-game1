@@ -18,17 +18,19 @@ and tell the linker to link with the .lib file.
 #endif
 
 #include <fstream>
-#include <irrlicht.h>
+#include <unistd.h>
 #include <map>
 #include <sstream>
 #include <iostream>
+
+#include <irrlicht.h>
 
 #include <Newton.h>
 #include <dVector.h>
 #include <dMatrix.h>
 #include <dQuaternion.h>
 
-#include <luacppinterace/luacppinterface.h>
+#include <luacppinterface/luacppinterface.h>
 
 using namespace irr;
 
@@ -762,6 +764,7 @@ public:
         std::ifstream inf(filename);
 
         if (!inf.good()) {
+            printf("[ERROR]: Could not find script '%s'\n", filename.c_str());
             throw (std::string("Could not find script `") + filename + std::string("`")).c_str();
         }
 
@@ -781,6 +784,30 @@ public:
     }
 };
 
+/*
+class IEventHandler {
+public:
+    virtual void handle(const SEvent &evt) = 0;
+};
+
+class IScriptEventHandler : public IEventHandler {
+public:
+    IScriptEventHandler(std::shared_ptr<ScriptManager> scriptMgr) : scriptMgr(scriptMgr) {}
+
+protected:
+    std::shared_ptr<ScriptManager> scriptMgr;
+};
+
+class ScriptKeyboardEventHandler : public IEventHandler {
+public:
+    ScriptKeyboardEventHandler(std::shared_ptr<ScriptManager> scriptMgr) : IScriptEventHandler(scriptMgr) {}
+
+    virtual void handle(const SEvent &evt) {
+        scriptMgr->setKeyState(evt.KeyInput.Key, evt.KeyInput.PressedDown);
+    };
+};
+*/
+
 class MyEventReceiver : public IEventReceiver {
 public:
     MyEventReceiver(ScriptManager *scriptManager) {
@@ -796,11 +823,28 @@ public:
         if (event.EventType == irr::EET_KEY_INPUT_EVENT)
             scriptMgr->setKeyState(event.KeyInput.Key, event.KeyInput.PressedDown);
 
+        /*
+        if (this->eventHandlers[eventType]) {
+            for (auto handler : this->eventHandlers[eventType]) {
+                handler->handle(event);
+            }
+        }
+        */
+
         return false;
     }
 
+    /*
+    void addEventHandler(irr::EventType eventType, std::shared_ptr<IEventHandler> handler) {
+        if (!this->eventHandlers[eventType])
+            this->eventHandlers.put(eventHandler, std::vector<std::shared_ptr<IEventHandler>>());
+        this->eventHandlers[eventType].push_back(handler);
+    }
+    */
+
 private:
     ScriptManager *scriptMgr;
+    // std::map<irr::EventType, std::vector<std::shared_ptr<IEventHandler>>> eventHandlers;
 };
 
 /*
@@ -811,22 +855,42 @@ create some other additional scene nodes, to show that there are also some
 different possibilities to move and animate scene nodes.
 */
 int main() {
+    printf("Creating device...\n");
+
     IrrlichtDevice *device = createDevice(video::EDT_OPENGL,
                                           core::dimension2d<u32>(640, 480), 16, false, false, false);
 
-    if (device == 0)
+    if (device == 0) {
+        printf("[ERROR] Could not create device!\n");
+
         return 1; // could not create selected driver.
+    }
 
     video::IVideoDriver *driver = device->getVideoDriver();
     scene::ISceneManager *smgr = device->getSceneManager();
 
+    printf("Creating script manager...\n");
+
     ScriptManager *scriptMgr = new ScriptManager(device, smgr, driver);
+
+    printf("Creating event receiver...\n");
 
     MyEventReceiver receiver(scriptMgr);
 
     device->setEventReceiver(&receiver);
 
-    scriptMgr->loadScript("media/scripts/test1.lua");
+    {
+        char* s = new char[255];
+        getcwd(s, 255);
+        printf("[INFO] CWD: %s\n", s);
+    }
+
+    printf("Loading script 'media/media/media/scripts/test1.lua'...\n");
+
+    // Sorry, but Buck does this crap at the moment being
+    scriptMgr->loadScript("media/media/media/scripts/test1.lua");
+
+    printf("Creating camera...\n");
 
     /*
     To be able to look at and move around in this scene, we create a first
@@ -837,11 +901,13 @@ int main() {
 
     camera->setPosition(irr::core::vector3df(0, 10.0, -140.0f));
 
+    printf("Adding Irrlicht logo...\n");
+
     /*
     Add a colorful irrlicht logo
     */
     device->getGUIEnvironment()->addImage(
-            driver->getTexture("media/textures/irrlichtlogoalpha2.tga"),
+            driver->getTexture("media/media/media/textures/irrlichtlogoalpha2.tga"),
             core::position2d<s32>(10, 20));
 
     // In order to do framerate independent movement, we have to know

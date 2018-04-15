@@ -1,14 +1,16 @@
-export_file(
-    name = "models",
-    visibility = [ "PUBLIC" ],
+filegroup(
+    name = "media",
+    srcs = glob([ './**/*' ], exclude = [ 'BUCK' ]),
+    visibility = [ 'PUBLIC' ]
 )
 
-export_file(
-    name = "scripts",
-    visibility = [ "PUBLIC" ],
-)
-
-export_file(
-    name = "textures",
-    visibility = [ "PUBLIC" ],
+apple_resource(
+    name = "media-osx-resource",
+    files = glob([
+        './**/*',
+    ]),
+    dirs = [
+        '.',
+    ],
+    visibility = [ 'PUBLIC' ],
 )

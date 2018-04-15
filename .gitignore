@@ -15,3 +15,4 @@ irrlicht-1.8.3/tools
 buck-out
 *.o
 .buckd
+irrlicht-newton-game-osx.app

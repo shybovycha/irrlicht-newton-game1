@@ -18,224 +18,215 @@ cxx_library(
 )
 
 cxx_library(
-  name = "jpeglib",
-  headers = glob([
-    "source/Irrlicht/jpeglib/*.h"
-  ]),
-  platform_srcs = [
-    (".*osx.*", [ "source/Irrlicht/jpeglib/jmemmac.c" ])
-  ],
-  exported_headers = subdir_glob([ ("source/Irrlicht/jpeglib", "*.h") ]),
-  header_namespace = "",
-  srcs = [
-      "source/Irrlicht/jpeglib/jaricom.c",
-      "source/Irrlicht/jpeglib/jcapimin.c",
-      "source/Irrlicht/jpeglib/jcapistd.c",
-      "source/Irrlicht/jpeglib/jcarith.c",
-      "source/Irrlicht/jpeglib/jccoefct.c",
-      "source/Irrlicht/jpeglib/jccolor.c",
-      "source/Irrlicht/jpeglib/jcdctmgr.c",
-      "source/Irrlicht/jpeglib/jchuff.c",
-      "source/Irrlicht/jpeglib/jcinit.c",
-      "source/Irrlicht/jpeglib/jcmainct.c",
-      "source/Irrlicht/jpeglib/jcmarker.c",
-      "source/Irrlicht/jpeglib/jcmaster.c",
-      "source/Irrlicht/jpeglib/jcomapi.c",
-      "source/Irrlicht/jpeglib/jcparam.c",
-      "source/Irrlicht/jpeglib/jcprepct.c",
-      "source/Irrlicht/jpeglib/jcsample.c",
-      "source/Irrlicht/jpeglib/jctrans.c",
-      "source/Irrlicht/jpeglib/jdapimin.c",
-      "source/Irrlicht/jpeglib/jdapistd.c",
-      "source/Irrlicht/jpeglib/jdarith.c",
-      "source/Irrlicht/jpeglib/jdatadst.c",
-      "source/Irrlicht/jpeglib/jdatasrc.c",
-      "source/Irrlicht/jpeglib/jdcoefct.c",
-      "source/Irrlicht/jpeglib/jdcolor.c",
-      "source/Irrlicht/jpeglib/jddctmgr.c",
-      "source/Irrlicht/jpeglib/jdhuff.c",
-      "source/Irrlicht/jpeglib/jdinput.c",
-      "source/Irrlicht/jpeglib/jdmainct.c",
-      "source/Irrlicht/jpeglib/jdmarker.c",
-      "source/Irrlicht/jpeglib/jdmaster.c",
-      "source/Irrlicht/jpeglib/jdmerge.c",
-      "source/Irrlicht/jpeglib/jdpostct.c",
-      "source/Irrlicht/jpeglib/jdsample.c",
-      "source/Irrlicht/jpeglib/jdtrans.c",
-      "source/Irrlicht/jpeglib/jerror.c",
-      "source/Irrlicht/jpeglib/jfdctflt.c",
-      "source/Irrlicht/jpeglib/jfdctfst.c",
-      "source/Irrlicht/jpeglib/jfdctint.c",
-      "source/Irrlicht/jpeglib/jidctflt.c",
-      "source/Irrlicht/jpeglib/jidctfst.c",
-      "source/Irrlicht/jpeglib/jidctint.c",
-      "source/Irrlicht/jpeglib/jquant1.c",
-      "source/Irrlicht/jpeglib/jquant2.c",
-      "source/Irrlicht/jpeglib/jutils.c",
-      "source/Irrlicht/jpeglib/jmemmgr.c",
-      "source/Irrlicht/jpeglib/jmemansi.c",
-      "source/Irrlicht/jpeglib/jmemnobs.c",
-      "source/Irrlicht/jpeglib/jmemname.c",
-  ],
-  compiler_flags = [
-      "-xc"
-  ],
-  platform_headers = [
-      (".*osx.*", [ "source/Irrlicht/jpeglib/jmemmac.c", ]),
-  ],
-)
-
-cxx_library(
-  name = "libpng",
-  headers = glob([
-    "source/Irrlicht/libpng/*.h",
-  ]),
-  exported_headers = subdir_glob([ ("source/Irrlicht/libpng", "*.h") ]),
-  header_namespace = "",
-  srcs = glob([ "source/Irrlicht/libpng/*.c" ]),
-  deps = [
-  	":zlib",
-  ],
-  compiler_flags = [
-    "-xc"
-  ]
-)
-
-cxx_library(
-  name = "lzma",
-  headers = glob([
-    "source/Irrlicht/lzma/*.h",
-  ]),
-  exported_headers = subdir_glob([ ("source/Irrlicht/lzma", "*.h") ]),
-  header_namespace = "",
-  srcs = glob([ "source/Irrlicht/lzma/*.c" ]),
-  compiler_flags = [
-    "-xc"
-  ]
-)
-
-cxx_library(
-  name = "zlib",
-  headers = glob([
-    "source/Irrlicht/zlib/crc32.h",
-    "source/Irrlicht/zlib/deflate.h",
-    "source/Irrlicht/zlib/gzguts.h",
-    "source/Irrlicht/zlib/inffast.h",
-    "source/Irrlicht/zlib/inffixed.h",
-    "source/Irrlicht/zlib/inflate.h",
-    "source/Irrlicht/zlib/inftrees.h",
-    "source/Irrlicht/zlib/trees.h",
-    "source/Irrlicht/zlib/zutil.h",
-    "source/Irrlicht/zlib/zlib.h",
-    "source/Irrlicht/zlib/zconf.h",
-  ]),
-  exported_headers = [
-    "source/Irrlicht/zlib/zlib.h",
-    "source/Irrlicht/zlib/zconf.h",
-  ],
-  header_namespace = "",
-  srcs = glob([ "source/Irrlicht/zlib/*.c" ]),
-  compiler_flags = [
-    "-xc"
-  ]
-)
-
-cxx_library(
-  name = "aesGladman",
-  headers = subdir_glob([
-    ("include", "*.h"),
-    ("source/Irrlicht/aesGladman", "*.h"),
-  ]),
-  exported_headers = subdir_glob([ ("source/Irrlicht/aesGladman", "*.h") ]),
-  header_namespace = "",
-  srcs = glob([ "source/Irrlicht/aesGladman/*.cpp" ]),
-  compiler_flags = [
-    "-xc++"
-  ]
-)
-
-apple_library(
-   name = "irrlicht-osx",
+   name = "jpeglib",
    headers = glob([
-      "include/*.h",
-      "source/Irrlicht/*.h",
-      "source/Irrlicht/MacOSX/*.h",
+        "source/Irrlicht/jpeglib/*.h"
    ]),
-   exported_headers = subdir_glob([ ("include", "*.h") ]),
+   exported_headers = subdir_glob([ ("source/Irrlicht/jpeglib", "*.h") ]),
    header_namespace = "",
-   srcs = glob([
-      "source/Irrlicht/*.cpp",
-      "source/Irrlicht/MacOSX/*.mm",
-   ]),
-   deps = [
-      ":libpng",
-      ":jpeglib",
-      ":lzma",
-      ":bzip2",
-      ":zlib",
-      ":aesGladman",
-   ],
-   frameworks = [
-      "$SDKROOT/System/Library/Frameworks/Foundation.framework",
-      "$SDKROOT/System/Library/Frameworks/IOKit.framework",
-      "$SDKROOT/System/Library/Frameworks/OpenGL.framework",
-      "$SDKROOT/System/Library/Frameworks/Cocoa.framework",
-      "$SDKROOT/System/Library/Frameworks/CoreVideo.framework",
+   srcs = [
+        "source/Irrlicht/jpeglib/jaricom.c",
+        "source/Irrlicht/jpeglib/jcapimin.c",
+        "source/Irrlicht/jpeglib/jcapistd.c",
+        "source/Irrlicht/jpeglib/jcarith.c",
+        "source/Irrlicht/jpeglib/jccoefct.c",
+        "source/Irrlicht/jpeglib/jccolor.c",
+        "source/Irrlicht/jpeglib/jcdctmgr.c",
+        "source/Irrlicht/jpeglib/jchuff.c",
+        "source/Irrlicht/jpeglib/jcinit.c",
+        "source/Irrlicht/jpeglib/jcmainct.c",
+        "source/Irrlicht/jpeglib/jcmarker.c",
+        "source/Irrlicht/jpeglib/jcmaster.c",
+        "source/Irrlicht/jpeglib/jcomapi.c",
+        "source/Irrlicht/jpeglib/jcparam.c",
+        "source/Irrlicht/jpeglib/jcprepct.c",
+        "source/Irrlicht/jpeglib/jcsample.c",
+        "source/Irrlicht/jpeglib/jctrans.c",
+        "source/Irrlicht/jpeglib/jdapimin.c",
+        "source/Irrlicht/jpeglib/jdapistd.c",
+        "source/Irrlicht/jpeglib/jdarith.c",
+        "source/Irrlicht/jpeglib/jdatadst.c",
+        "source/Irrlicht/jpeglib/jdatasrc.c",
+        "source/Irrlicht/jpeglib/jdcoefct.c",
+        "source/Irrlicht/jpeglib/jdcolor.c",
+        "source/Irrlicht/jpeglib/jddctmgr.c",
+        "source/Irrlicht/jpeglib/jdhuff.c",
+        "source/Irrlicht/jpeglib/jdinput.c",
+        "source/Irrlicht/jpeglib/jdmainct.c",
+        "source/Irrlicht/jpeglib/jdmarker.c",
+        "source/Irrlicht/jpeglib/jdmaster.c",
+        "source/Irrlicht/jpeglib/jdmerge.c",
+        "source/Irrlicht/jpeglib/jdpostct.c",
+        "source/Irrlicht/jpeglib/jdsample.c",
+        "source/Irrlicht/jpeglib/jdtrans.c",
+        "source/Irrlicht/jpeglib/jerror.c",
+        "source/Irrlicht/jpeglib/jfdctflt.c",
+        "source/Irrlicht/jpeglib/jfdctfst.c",
+        "source/Irrlicht/jpeglib/jfdctint.c",
+        "source/Irrlicht/jpeglib/jidctflt.c",
+        "source/Irrlicht/jpeglib/jidctfst.c",
+        "source/Irrlicht/jpeglib/jidctint.c",
+        "source/Irrlicht/jpeglib/jquant1.c",
+        "source/Irrlicht/jpeglib/jquant2.c",
+        "source/Irrlicht/jpeglib/jutils.c",
+        "source/Irrlicht/jpeglib/jmemmgr.c",
+        "source/Irrlicht/jpeglib/jmemansi.c",
+        "source/Irrlicht/jpeglib/jmemnobs.c",
+        "source/Irrlicht/jpeglib/jmemname.c",
    ],
    compiler_flags = [
-      "-xobjective-c++",
-      "-DIRRLICHT_EXPORTS=1",
-      "-Wall",
-      "-pipe",
-      "-fno-exceptions",
-      "-fno-rtti",
-      "-fstrict-aliasing",
-      "-O3",
-      "-DPNG_THREAD_UNSAFE_OK",
-      "-DPNG_NO_MMX_CODE",
-      "-DPNG_NO_MNG_FEATURES",
-      "-fPIC",
-   ],
-   # link_style = "static",
-   visibility = [
-      "PUBLIC"
+        "-xc"
    ],
 )
 
-apple_library(
-   name = "irrlicht",
-   headers = glob([ "include/*.h", "source/Irrlicht/*.h" ]),
-   exported_headers = subdir_glob([ ("include", "*.h") ]),
-   header_namespace = "",
-   srcs = glob([
-      "source/Irrlicht/*.cpp",
+cxx_library(
+   name = "libpng",
+   headers = glob([
+        "source/Irrlicht/libpng/*.h",
    ]),
-   deps = [
-      ":libpng",
-      ":jpeglib",
-      ":lzma",
-      ":bzip2",
-      ":zlib",
-      ":aesGladman",
-   ],
+   exported_headers = subdir_glob([ ("source/Irrlicht/libpng", "*.h") ]),
+   header_namespace = "",
+   srcs = glob([ "source/Irrlicht/libpng/*.c" ]),
    compiler_flags = [
-      "-DIRRLICHT_EXPORTS=1",
-      "-Wall",
-      "-pipe",
-      "-fno-exceptions",
-      "-fno-rtti",
-      "-fstrict-aliasing",
-      "-O3",
-      "-DPNG_THREAD_UNSAFE_OK",
-      "-DPNG_NO_MMX_CODE",
-      "-DPNG_NO_MNG_FEATURES",
-      "-fPIC",
-   ],
-   visibility = [
-      "PUBLIC"
-   ],
-   labels = [
-      "in progress",
-      "need to import that apple_library (:irrlicht-osx) when compiling for OSX"
+        "-xc"
    ]
+)
+
+cxx_library(
+   name = "lzma",
+   headers = glob([
+        "source/Irrlicht/lzma/*.h",
+   ]),
+   exported_headers = subdir_glob([ ("source/Irrlicht/lzma", "*.h") ]),
+   header_namespace = "",
+   srcs = glob([ "source/Irrlicht/lzma/*.c" ]),
+   compiler_flags = [
+        "-xc"
+   ]
+)
+
+cxx_library(
+   name = "zlib",
+   headers = glob([
+        "source/Irrlicht/zlib/crc32.h",
+        "source/Irrlicht/zlib/deflate.h",
+        "source/Irrlicht/zlib/gzguts.h",
+        "source/Irrlicht/zlib/inffast.h",
+        "source/Irrlicht/zlib/inffixed.h",
+        "source/Irrlicht/zlib/inflate.h",
+        "source/Irrlicht/zlib/inftrees.h",
+        "source/Irrlicht/zlib/trees.h",
+        "source/Irrlicht/zlib/zutil.h",
+        "source/Irrlicht/zlib/zlib.h",
+        "source/Irrlicht/zlib/zconf.h",
+   ]),
+   exported_headers = [
+        "source/Irrlicht/zlib/zlib.h",
+        "source/Irrlicht/zlib/zconf.h",
+   ],
+   header_namespace = "",
+   srcs = glob([ "source/Irrlicht/zlib/*.c" ]),
+   compiler_flags = [
+        "-xc"
+   ]
+)
+
+cxx_library(
+   name = "aesGladman",
+   headers = subdir_glob([
+        ("include", "*.h"),
+        ("source/Irrlicht/aesGladman", "*.h"),
+   ]),
+   exported_headers = subdir_glob([ ("source/Irrlicht/aesGladman", "*.h") ]),
+   header_namespace = "",
+   srcs = glob([ "source/Irrlicht/aesGladman/*.cpp" ]),
+   compiler_flags = [
+        "-xc++",
+        "-Wno-narrowing",
+   ]
+)
+
+apple_library(
+    name = "irrlicht-osx",
+    headers = glob([
+        "include/*.h",
+        "source/Irrlicht/*.h",
+        "source/Irrlicht/MacOSX/*.h",
+    ]),
+    exported_headers = subdir_glob([ ("include", "*.h") ]),
+    header_namespace = "",
+    srcs = glob([
+        "source/Irrlicht/*.cpp",
+        "source/Irrlicht/MacOSX/*.mm",
+    ]),
+    deps = [
+        ":libpng",
+        ":jpeglib",
+        ":lzma",
+        ":bzip2",
+        ":zlib",
+        ":aesGladman",
+    ],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/IOKit.framework",
+        "$SDKROOT/System/Library/Frameworks/OpenGL.framework",
+        "$SDKROOT/System/Library/Frameworks/Cocoa.framework",
+        "$SDKROOT/System/Library/Frameworks/CoreVideo.framework",
+    ],
+    compiler_flags = [
+        "-xobjective-c++",
+        "-DIRRLICHT_EXPORTS=1",
+        "-Wall",
+        "-pipe",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-fstrict-aliasing",
+        "-O3",
+        "-DPNG_THREAD_UNSAFE_OK",
+        "-DPNG_NO_MMX_CODE",
+        "-DPNG_NO_MNG_FEATURES",
+        "-fPIC",
+    ],
+    visibility = [
+        "PUBLIC"
+    ],
+)
+
+apple_library(
+    name = "irrlicht",
+    headers = glob([ "include/*.h", "source/Irrlicht/*.h" ]),
+    exported_headers = subdir_glob([ ("include", "*.h") ]),
+    header_namespace = "",
+    srcs = glob([
+        "source/Irrlicht/*.cpp",
+    ]),
+    deps = [
+        ":libpng",
+        ":jpeglib",
+        ":lzma",
+        ":bzip2",
+        ":zlib",
+        ":aesGladman",
+    ],
+    compiler_flags = [
+        "-DIRRLICHT_EXPORTS=1",
+        "-Wall",
+        "-pipe",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-fstrict-aliasing",
+        "-O3",
+        "-DPNG_THREAD_UNSAFE_OK",
+        "-DPNG_NO_MMX_CODE",
+        "-DPNG_NO_MNG_FEATURES",
+        "-fPIC",
+    ],
+    visibility = [
+        "PUBLIC"
+    ],
+    labels = [
+        "in progress",
+        "need to import that apple_library (:irrlicht-osx) when compiling for OSX"
+    ],
 )

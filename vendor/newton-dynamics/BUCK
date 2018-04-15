@@ -135,8 +135,6 @@ cxx_library(
         ":dScene",
     ],
     exported_deps = [
-        "//vendor/enet:enet",
-        "//vendor/tinyxml:tinyxml",
         "//vendor/newton-dynamics/coreLibrary_300:Newton",
         ":dContainers",
         ":dAnimation",
@@ -158,8 +156,6 @@ cxx_library(
         ":dScene",
     ],
     exported_deps = [
-        "//vendor/enet:enet",
-        "//vendor/tinyxml:tinyxml",
         "//vendor/newton-dynamics/coreLibrary_300:NewtonStatic",
         ":dContainers",
         ":dAnimation",
@@ -169,4 +165,3 @@ cxx_library(
     ],
     visibility = [ "PUBLIC" ]
 )
-
