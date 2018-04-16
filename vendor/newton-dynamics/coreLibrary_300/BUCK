@@ -1,6 +1,7 @@
 
 cxx_library(
     name = "pthreads",
+    supported_platforms_regex = "^windows.*",
     headers = subdir_glob([
         ("source/pthreads.2", "pthread.h"),
         ("source/pthreads.2", "implement.h"),
@@ -14,14 +15,21 @@ cxx_library(
     srcs = glob([
         "source/pthreads.2/pthread.c",
     ]),
+    compiler_flags = [
+        "-fdeclspec",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 cxx_library(
     name = "coreLibrary_300",
-    precompiled_header = ":NewtonStdAfx",
-    deps = [
-        ":pthreads",
-    ],
+    # # For Windows users - since Buck does not yet work with
+    # # `supported_platforms_regex` quite well - just uncomment the following lines:
+    # deps = [
+    #     ":pthreads",
+    # ],
     headers = glob([
         "source/core/*.h",
         "source/physics/*.h",

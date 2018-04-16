@@ -885,10 +885,10 @@ int main() {
         printf("[INFO] CWD: %s\n", s);
     }
 
-    printf("Loading script 'media/media/media/scripts/test1.lua'...\n");
+    printf("Loading script 'bundle-osx.app/Contents/Resources/media/scripts/test1.lua'...\n");
 
     // Sorry, but Buck does this crap at the moment being
-    scriptMgr->loadScript("media/media/media/scripts/test1.lua");
+    scriptMgr->loadScript("bundle-osx.app/Contents/Resources/media/scripts/test1.lua");
 
     printf("Creating camera...\n");
 
@@ -907,7 +907,7 @@ int main() {
     Add a colorful irrlicht logo
     */
     device->getGUIEnvironment()->addImage(
-            driver->getTexture("media/media/media/textures/irrlichtlogoalpha2.tga"),
+            driver->getTexture("bundle-osx.app/Contents/Resources/media/textures/irrlichtlogoalpha2.tga"),
             core::position2d<s32>(10, 20));
 
     // In order to do framerate independent movement, we have to know

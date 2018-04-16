@@ -1,8 +1,0 @@
-cxx_library(
-    name = "bzip2",
-    srcs = glob([ "*.c" ]),
-    headers = glob([ "*.h" ]),
-    exported_headers = glob([ "*.h" ]),
-    header_namespace = "",
-    visibility = [ "PUBLIC" ],
-)

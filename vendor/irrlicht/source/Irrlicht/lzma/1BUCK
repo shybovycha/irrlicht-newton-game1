@@ -1,7 +1,0 @@
-cxx_library(
-    name = "lzma",
-    headers = glob([ "*.h" ]),
-    exported_headers = glob([ "*.h" ]),
-    srcs = glob([ "*.c" ]),
-    visibility = [ "PUBLIC" ],
-)

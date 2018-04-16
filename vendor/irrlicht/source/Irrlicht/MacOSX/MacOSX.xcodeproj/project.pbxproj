@@ -6059,19 +6059,15 @@
 		1DEB921F08733DC00010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = build;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = MacOSX_Prefix.pch;
-				INSTALL_PATH = build;
+				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = Irrlicht;
-				SDKROOT = macosx10.11;
-				SYMROOT = build;
 				ZERO_LINK = NO;
 			};
 			name = Debug;
@@ -6079,17 +6075,13 @@
 		1DEB922008733DC00010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				DSTROOT = build;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = MacOSX_Prefix.pch;
-				INSTALL_PATH = build;
+				INSTALL_PATH = /usr/local/lib;
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
 				PRODUCT_NAME = Irrlicht;
-				SDKROOT = macosx10.11;
-				SYMROOT = build;
 			};
 			name = Release;
 		};

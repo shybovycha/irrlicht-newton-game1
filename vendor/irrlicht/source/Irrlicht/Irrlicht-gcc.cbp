@@ -21,6 +21,7 @@
 					<Add option="-W" />
 					<Add option="-O0" />
 					<Add option="-Wno-unused-parameter" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-DWIN32" />
 					<Add option="-D_DEBUG" />
 					<Add option="-D_WINDOWS" />
@@ -63,6 +64,7 @@
 					<Add option="-Wall" />
 					<Add option="-W" />
 					<Add option="-Wno-unused-parameter" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
 					<Add option="-D_WINDOWS" />
@@ -103,10 +105,11 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-W" />
 					<Add option="-Wall" />
+					<Add option="-W" />
 					<Add option="-ffast-math" />
 					<Add option="-Wno-unused-parameter" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
 					<Add option="-D_WINDOWS" />
@@ -145,12 +148,13 @@
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 				<Compiler>
-					<Add option="-W" />
+					<Add option="-Wextra" />
 					<Add option="-Wall" />
 					<Add option="-g" />
+					<Add option="-W" />
 					<Add option="-O0" />
-					<Add option="-Wextra" />
 					<Add option="-Wno-unused-parameter" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-DWIN32" />
 					<Add option="-D_DEBUG" />
 					<Add option="-D_WINDOWS" />
@@ -190,6 +194,7 @@
 					<Add option="-Wall" />
 					<Add option="-W" />
 					<Add option="-Wno-unused-parameter" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
 					<Add option="-D_WINDOWS" />
@@ -227,10 +232,11 @@
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-Os" />
 					<Add option="-O3" />
-					<Add option="-W" />
 					<Add option="-Wall" />
+					<Add option="-W" />
 					<Add option="-ffast-math" />
 					<Add option="-Wno-unused-parameter" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-DWIN32" />
 					<Add option="-DNDEBUG" />
 					<Add option="-D_WINDOWS" />
@@ -267,11 +273,12 @@
 				<Compiler>
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
+					<Add option="-fPIC" />
 					<Add option="-g" />
 					<Add option="-O0" />
 					<Add option="-Wno-unused-parameter" />
-					<Add option="-fPIC" />
 					<Add option="-fno-exceptions" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-D_DEBUG" />
 					<Add directory="../../include" />
 					<Add directory="zlib" />
@@ -296,9 +303,10 @@
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-Wextra" />
-					<Add option="-Wno-unused-parameter" />
 					<Add option="-fPIC" />
+					<Add option="-Wno-unused-parameter" />
 					<Add option="-fno-exceptions" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add directory="../../include" />
 					<Add directory="zlib" />
 					<Add directory="libpng" />
@@ -322,10 +330,11 @@
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-Wextra" />
-					<Add option="-Wno-unused-parameter" />
 					<Add option="-fPIC" />
+					<Add option="-Wno-unused-parameter" />
 					<Add option="-ffast-math" />
 					<Add option="-fno-exceptions" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add directory="../../include" />
 					<Add directory="zlib" />
 					<Add directory="libpng" />
@@ -353,6 +362,7 @@
 					<Add option="-O0" />
 					<Add option="-Wno-unused-parameter" />
 					<Add option="-fno-exceptions" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-D_IRR_STATIC_LIB_" />
 					<Add option="-D_DEBUG" />
 					<Add directory="../../include" />
@@ -379,6 +389,7 @@
 					<Add option="-Wextra" />
 					<Add option="-Wno-unused-parameter" />
 					<Add option="-fno-exceptions" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-D_IRR_STATIC_LIB_" />
 					<Add directory="../../include" />
 					<Add directory="zlib" />
@@ -405,6 +416,7 @@
 					<Add option="-Wno-unused-parameter" />
 					<Add option="-ffast-math" />
 					<Add option="-fno-exceptions" />
+					<Add option="-U__STRICT_ANSI__" />
 					<Add option="-D_IRR_STATIC_LIB_" />
 					<Add directory="../../include" />
 					<Add directory="zlib" />

@@ -10,7 +10,7 @@
 #define BZ_IMPORT
 #include <stdio.h>
 #include <stdlib.h>
-#include <bzlib.h>
+#include "bzlib.h"
 #ifdef _WIN32
 #include <io.h>
 #endif
@@ -18,7 +18,7 @@
 
 #ifdef _WIN32
 
-#define BZ2_LIBNAME "libbz2-1.0.2.DLL"
+#define BZ2_LIBNAME "libbz2-1.0.2.DLL" 
 
 #include <windows.h>
 static int BZ2DLLLoaded = 0;

@@ -1,8 +1,0 @@
-cxx_library(
-    name = "aesGladman",
-    srcs = glob([ "*.cpp" ]),
-    headers = glob([ "*.h" ]),
-    exported_headers = glob([ "*.h" ]),
-    header_namespace = "",
-    visibility = [ "PUBLIC" ],
-)

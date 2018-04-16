@@ -81,14 +81,17 @@ cxx_library(
 
 cxx_library(
    name = "libpng",
-   headers = glob([
-        "source/Irrlicht/libpng/*.h",
+   headers = subdir_glob([
+        ("source/Irrlicht/libpng", "*.h"),
    ]),
+   deps = [
+        ":zlib",
+   ],
    exported_headers = subdir_glob([ ("source/Irrlicht/libpng", "*.h") ]),
    header_namespace = "",
    srcs = glob([ "source/Irrlicht/libpng/*.c" ]),
    compiler_flags = [
-        "-xc"
+      "-xc"
    ]
 )
 
@@ -120,10 +123,10 @@ cxx_library(
         "source/Irrlicht/zlib/zlib.h",
         "source/Irrlicht/zlib/zconf.h",
    ]),
-   exported_headers = [
-        "source/Irrlicht/zlib/zlib.h",
-        "source/Irrlicht/zlib/zconf.h",
-   ],
+   exported_headers = subdir_glob([
+        ("source/Irrlicht/zlib", "zlib.h"),
+        ("source/Irrlicht/zlib", "zconf.h"),
+   ]),
    header_namespace = "",
    srcs = glob([ "source/Irrlicht/zlib/*.c" ]),
    compiler_flags = [
@@ -148,6 +151,7 @@ cxx_library(
 
 apple_library(
     name = "irrlicht-osx",
+    # supported_platforms_regex = "^macos.*",
     headers = glob([
         "include/*.h",
         "source/Irrlicht/*.h",

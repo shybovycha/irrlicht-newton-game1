@@ -25,24 +25,33 @@ This repo contains the code for [Irrlicht + Newton game tutorial](http://shybovy
 
 1. install [Buck](https://buckbuild.com/) from master branch
 2. to build project, run the command from the project root directory
-    a. for OSX:
 
-        buck build //irrlicht-newton-game:bundle-osx\#macosx-x86_64
+  a. for OSX:
 
-    b. for Linux & others:
+    ```bash
+    buck build //irrlicht-newton-game:bundle-osx\#macosx-x86_64
+    ```
 
-        buck build //irrlicht-newton-game:binary-generic
+  b. for Linux & others:
+
+    ```bash
+    buck build //irrlicht-newton-game:binary-generic
+    ```
 
 3. copy the `media/` directory to the build directory
 4. run a demo with
 
-    a. for OSX:
+  a. for OSX:
 
-        buck run //irrlicht-newton-game:bundle-osx\#macosx-x86_64
+    ```bash
+    buck run //irrlicht-newton-game:bundle-osx\#macosx-x86_64
+    ```
 
-    b. for others:
+  b. for others:
 
-        buck run //irrlicht-newton-game:binary-generic
+    ```bash
+    buck run //irrlicht-newton-game:binary-generic
+    ```
 
 ## Important hints & troubleshooting
 
@@ -67,7 +76,7 @@ vendor/irrlicht/source/Irrlicht/MacOSX/CIrrDeviceMacOSX.mm:671:26: error: cast f
 
 The fix was relatively easy, but required modifying the Irrlicht sources, which makes me sad.
 
-```
+```objc
 // before:
 windowattribs[14]=(NSOpenGLPixelFormatAttribute)nil;
 
@@ -76,7 +85,7 @@ windowattribs[14]=0;
 ```
 
 
-```
+```objc
 // before:
 NSOpenGLPixelFormatAttribute windowattribs[] =
 {
@@ -113,7 +122,7 @@ NSOpenGLPixelFormatAttribute windowattribs[] =
 Change one line in ObjectiveC code of Irrlicht, in the `CIrrDeviceMacOSX.mm` file,
 the `CIrrDeviceMacOSX::CIrrDeviceMacOSX` method (constructor):
 
-```
+```objc
 // before:
 [NSApplication sharedApplication]
 
@@ -128,19 +137,19 @@ And then rebuild the application.
 First, you will need to alter all the paths in the application code (both in C++ code and the scripts) to
 use the paths relative to the parent directory, containing your application bundle (the `.app/` directory):
 
-```
+```cpp
 scriptMgr->loadScript("irrlicht-newton-game.app/Contents/MacOS/media/media/media/scripts/test1.lua");
 ```
 
 and
 
-```
+```cpp
 createMesh("colliseum", "irrlicht-newton-game.app/Contents/MacOS/media/media/media/models/ramp_floor.3ds", "./media/media/media/models/ramp_floor.png")
 ```
 
 Then run these commands to create the bundle itself:
 
-```
+```bash
 cd buck-out/gen/irrlicht-newton-game
 mkdir -p irrlicht-newton-game.app/Contents/MacOS
 cp -r ../media irrlicht-newton-game.app/Contents/MacOS
