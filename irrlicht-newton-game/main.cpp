@@ -28,7 +28,7 @@ and tell the linker to link with the .lib file.
 #include <dMatrix.h>
 #include <dQuaternion.h>
 
-#include <luacppinterace/luacppinterface.h>
+#include <luacppinterface.h>
 
 using namespace irr;
 
@@ -826,7 +826,7 @@ int main() {
 
     device->setEventReceiver(&receiver);
 
-    scriptMgr->loadScript("media/scripts/test1.lua");
+    scriptMgr->loadScript("irrlicht-newton-game/irrlicht-newton-game.runfiles/__main__/irrlicht-newton-game/media/scripts/test1.lua");
 
     /*
     To be able to look at and move around in this scene, we create a first
@@ -841,7 +841,7 @@ int main() {
     Add a colorful irrlicht logo
     */
     device->getGUIEnvironment()->addImage(
-            driver->getTexture("media/textures/irrlichtlogoalpha2.tga"),
+            driver->getTexture("irrlicht-newton-game/irrlicht-newton-game.runfiles/__main__/irrlicht-newton-game/media/textures/irrlichtlogoalpha2.tga"),
             core::position2d<s32>(10, 20));
 
     // In order to do framerate independent movement, we have to know

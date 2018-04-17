@@ -1,5 +1,26 @@
 load("@build_bazel_rules_apple//apple:ios.bzl", "ios_application")
 
+config_setting(
+  name = "windows",
+  constraint_values = [
+    "@bazel_tools//platforms:windows",
+  ],
+)
+
+config_setting(
+  name = "osx",
+  constraint_values = [
+    "@bazel_tools//platforms:osx",
+  ],
+)
+
+config_setting(
+  name = "linux",
+  constraint_values = [
+    "@bazel_tools//platforms:linux",
+  ],
+)
+
 cc_library(
   name = "bzip2",
   hdrs = glob([
@@ -184,6 +205,7 @@ objc_library(
   textual_hdrs = glob([
     "include/*.h",
   ]),
+  # strip_include_prefix = "vendor/irrlicht/",
   srcs = glob([
     "source/Irrlicht/*.cpp",
     "source/Irrlicht/MacOSX/*.mm",
@@ -225,7 +247,7 @@ objc_library(
 )
 
 cc_library(
-  name = "irrlicht-generic",
+  name = "irrlicht-linux",
   hdrs = glob([
     "include/*.h",
     "source/Irrlicht/*.h",
@@ -233,6 +255,7 @@ cc_library(
   textual_hdrs = glob([
     "include/*.h",
   ]),
+  strip_include_prefix = "vendor/irrlicht/",
   srcs = glob([
     "source/Irrlicht/*.cpp",
   ]),
@@ -259,5 +282,66 @@ cc_library(
   ],
   visibility = [
     "//visibility:public"
+  ],
+)
+
+cc_library(
+  name = "irrlicht-windows",
+  hdrs = glob([
+    "include/*.h",
+    "source/Irrlicht/*.h",
+  ]),
+  textual_hdrs = glob([
+    "include/*.h",
+  ]),
+  strip_include_prefix = "vendor/irrlicht/",
+  srcs = glob([
+    "source/Irrlicht/*.cpp",
+  ]),
+  deps = [
+    ":libpng",
+    ":jpeglib",
+    ":lzma",
+    ":bzip2",
+    ":zlib",
+    ":aesGladman",
+    # here should be DirectX
+  ],
+  copts = [
+    "-DIRRLICHT_EXPORTS=1",
+    "-Wall",
+    "-pipe",
+    "-fno-exceptions",
+    "-fno-rtti",
+    "-fstrict-aliasing",
+    "-O3",
+    "-DPNG_THREAD_UNSAFE_OK",
+    "-DPNG_NO_MMX_CODE",
+    "-DPNG_NO_MNG_FEATURES",
+    "-fPIC",
+  ],
+  visibility = [
+    "//visibility:public"
+  ],
+)
+
+cc_library(
+  name = "irrlicht",
+  deps = select({
+    ":osx": [
+      ":irrlicht-osx",
+    ],
+    ":linux": [
+      ":irrlicht-linux",
+    ],
+    ":windows": [
+      ":irrlicht-windows",
+    ],
+  }),
+  includes = [
+    "include"
+  ],
+  visibility = [
+    "//visibility:public",
   ],
 )
