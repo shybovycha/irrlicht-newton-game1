@@ -23,15 +23,9 @@ config_setting(
 
 cc_library(
   name = "bzip2",
-  hdrs = glob([
-    "source/Irrlicht/bzip2/*.h",
-  ]),
-  includes = [
-    "include",
-  ],
-  textual_hdrs = glob([
-    "source/Irrlicht/bzip2/*.h",
-  ]),
+  hdrs = glob([ "source/Irrlicht/bzip2/*.h" ]),
+  includes = [ "include" ],
+  textual_hdrs = glob([ "source/Irrlicht/bzip2/*.h" ]),
   srcs = [
     "source/Irrlicht/bzip2/blocksort.c",
     "source/Irrlicht/bzip2/huffman.c",
@@ -48,12 +42,8 @@ cc_library(
 
 cc_library(
   name = "jpeglib",
-  hdrs = glob([
-    "source/Irrlicht/jpeglib/*.h"
-  ]),
-  textual_hdrs = glob([
-    "source/Irrlicht/jpeglib/*.h",
-  ]),
+  hdrs = glob([ "source/Irrlicht/jpeglib/*.h" ]),
+  textual_hdrs = glob([ "source/Irrlicht/jpeglib/*.h" ]),
   srcs = [
     "source/Irrlicht/jpeglib/jaricom.c",
     "source/Irrlicht/jpeglib/jcapimin.c",
@@ -109,18 +99,12 @@ cc_library(
 
 cc_library(
   name = "libpng",
-  hdrs = glob([
-    "source/Irrlicht/libpng/*.h",
-  ]),
   deps = [
     ":zlib",
   ],
-  textual_hdrs = glob([
-    "source/Irrlicht/libpng/*.h",
-  ]),
-  srcs = glob([
-    "source/Irrlicht/libpng/*.c",
-  ]),
+  hdrs = glob([ "source/Irrlicht/libpng/*.h" ]),
+  textual_hdrs = glob([ "source/Irrlicht/libpng/*.h" ]),
+  srcs = glob([ "source/Irrlicht/libpng/*.c" ]),
   copts = [
     "-xc"
   ]
@@ -128,15 +112,9 @@ cc_library(
 
 cc_library(
   name = "lzma",
-  hdrs = glob([
-    "source/Irrlicht/lzma/*.h",
-  ]),
-  textual_hdrs = glob([
-    "source/Irrlicht/lzma/*.h",
-  ]),
-  srcs = glob([
-    "source/Irrlicht/lzma/*.c",
-  ]),
+  hdrs = glob([ "source/Irrlicht/lzma/*.h" ]),
+  textual_hdrs = glob([ "source/Irrlicht/lzma/*.h" ]),
+  srcs = glob([ "source/Irrlicht/lzma/*.c" ]),
   copts = [
     "-xc"
   ]
@@ -157,13 +135,9 @@ cc_library(
     "source/Irrlicht/zlib/zlib.h",
     "source/Irrlicht/zlib/zconf.h",
   ],
-  textual_hdrs = glob([
-    "source/Irrlicht/zlib/*.h",
-  ]),
+  textual_hdrs = glob([ "source/Irrlicht/zlib/*.h" ]),
   strip_include_prefix = "source/Irrlicht/zlib/",
-  srcs = glob([
-    "source/Irrlicht/zlib/*.c",
-  ]),
+  srcs = glob([ "source/Irrlicht/zlib/*.c" ]),
   copts = [
     "-xc"
   ]
@@ -175,16 +149,12 @@ cc_library(
     "include/*.h",
     "source/Irrlicht/aesGladman/*.h",
   ]),
-  includes = [
-    "include",
-  ],
+  includes = [ "include" ],
   textual_hdrs = glob([
     "source/Irrlicht/*.h",
     "source/Irrlicht/aesGladman/*.h",
   ]),
-  srcs = glob([
-    "source/Irrlicht/aesGladman/*.cpp",
-  ]),
+  srcs = glob([ "source/Irrlicht/aesGladman/*.cpp" ]),
   copts = [
     "-xc++",
     "-Wno-narrowing",
