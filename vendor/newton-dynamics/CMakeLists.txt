@@ -1,9 +1,9 @@
-# Copyright (c) <2014> <Newton Game Dynamics>
-# 
+# Copyright (c) <2014-2017> <Newton Game Dynamics>
+#
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
 # arising from the use of this software.
-# 
+#
 # Permission is granted to anyone to use this software for any purpose,
 # including commercial applications, and to alter it and redistribute it
 # freely.
@@ -75,6 +75,10 @@ if(MSVC)
   add_definitions( /wd4786 /wd4503 /wd4251 /wd4275 /wd4290 /wd4661 /wd4996 /wd4127 /wd4100)
 endif()
 
+if(${CMAKE_C_COMPILER_ID} MATCHES "GNU" OR ${CMAKE_C_COMPILER_ID} MATCHES "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
+endif()
+
 # determine if we are compiling for a 32bit or 64bit system
 include(CheckTypeSize)
 CHECK_TYPE_SIZE("void*" PTR_SIZE BUILTIN_TYPES_ONLY)
@@ -84,5 +88,26 @@ else ()
   set(BUILD_64 FALSE)
 endif ()
 
-add_subdirectory("${NewtonSDK_SOURCE_DIR}/coreLibrary_300")
-add_subdirectory("${NewtonSDK_SOURCE_DIR}/packages")
+
+# options
+option("NEWTON_DEMOS_SANDBOX" "Build demos sandbox" ON)
+option("DOUBLE_PRECISION" "Use Double Precision" OFF)
+option("THREAD_EMULATION" "Use single thread only" OFF)
+
+if(THREAD_EMULATION)
+  add_definitions(-DDG_USE_THREAD_EMULATION)
+endif()
+
+if(DOUBLE_PRECISION)
+ add_definitions(-D_NEWTON_USE_DOUBLE)
+endif()
+
+
+# Newton core library
+add_subdirectory("${NewtonSDK_SOURCE_DIR}/sdk")
+
+# demos sandbox
+if(NEWTON_DEMOS_SANDBOX)
+  add_subdirectory("${NewtonSDK_SOURCE_DIR}/sdk/thirdParty")
+  add_subdirectory("${NewtonSDK_SOURCE_DIR}/applications/demosSandbox")
+endif()
