@@ -30,7 +30,7 @@ and tell the linker to link with the .lib file.
 #include <dMatrix.h>
 #include <dQuaternion.h>
 
-#include <luacppinterface/luacppinterface.h>
+#include <luacppinterface.h>
 
 using namespace irr;
 
@@ -879,18 +879,7 @@ int main() {
 
     device->setEventReceiver(&receiver);
 
-    {
-        char* s = new char[255];
-        getcwd(s, 255);
-        printf("[INFO] CWD: %s\n", s);
-    }
-
-    printf("Loading script 'bundle-osx.app/Contents/Resources/media/scripts/test1.lua'...\n");
-
-    // Sorry, but Buck does this crap at the moment being
-    scriptMgr->loadScript("bundle-osx.app/Contents/Resources/media/scripts/test1.lua");
-
-    printf("Creating camera...\n");
+    scriptMgr->loadScript("irrlicht-newton-game/irrlicht-newton-game.runfiles/__main__/irrlicht-newton-game/media/scripts/test1.lua");
 
     /*
     To be able to look at and move around in this scene, we create a first
@@ -907,7 +896,7 @@ int main() {
     Add a colorful irrlicht logo
     */
     device->getGUIEnvironment()->addImage(
-            driver->getTexture("bundle-osx.app/Contents/Resources/media/textures/irrlichtlogoalpha2.tga"),
+            driver->getTexture("irrlicht-newton-game/irrlicht-newton-game.runfiles/__main__/irrlicht-newton-game/media/textures/irrlichtlogoalpha2.tga"),
             core::position2d<s32>(10, 20));
 
     // In order to do framerate independent movement, we have to know
