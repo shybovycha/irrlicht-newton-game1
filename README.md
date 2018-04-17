@@ -11,6 +11,8 @@ This repo contains the code for [Irrlicht + Newton game tutorial](http://shybovy
 * **7 Nov 2015** Sample Irrlicht program compiles with CMake build system.
 * **3 Oct 2017** Migrated to Buck build system.
 * **13 Apr 2018** Added many more improvements to the build configuration and some troubleshooting guides.
+* **16 Apr 2018** Upgraded to Irrlicht 1.8.4
+* **18 Apr 2018** Migrated to Bazel build system
 
 ## TODO
 
@@ -19,38 +21,38 @@ This repo contains the code for [Irrlicht + Newton game tutorial](http://shybovy
 * ~~Fix OSX window focus~~
 * ~~Add automatic `media/` copying to the bundle/binary directory~~
 * ~~Generalize build rules for different platforms~~
-* Upgrade newton to `3.14`
+* ~~Upgrade Irrlicht to `1.8.4`~~
+* Upgrade NewtonGD to `3.14`
 
 ## Step-by-step build
 
-1. install [Buck](https://buckbuild.com/) from master branch
+1. install [Bazek](https://bazel.build/) from master branch
 2. to build project, run the command from the project root directory
 
   a. for OSX:
 
     ```bash
-    buck build //irrlicht-newton-game:bundle-osx\#macosx-x86_64
+    bazel build //irrlicht-newton-game:irrlicht-newton-game --apple_platform_type=macos
     ```
 
   b. for Linux & others:
 
     ```bash
-    buck build //irrlicht-newton-game:binary-generic
+    bazel build //irrlicht-newton-game:irrlicht-newton-game
     ```
 
-3. copy the `media/` directory to the build directory
-4. run a demo with
+3. run a demo with
 
   a. for OSX:
 
     ```bash
-    buck run //irrlicht-newton-game:bundle-osx\#macosx-x86_64
+    bazel run //irrlicht-newton-game:irrlicht-newton-game
     ```
 
   b. for others:
 
     ```bash
-    buck run //irrlicht-newton-game:binary-generic
+    bazel run //irrlicht-newton-game:irrlicht-newton-game --apple_platform_type=macos
     ```
 
 ## Important hints & troubleshooting
@@ -150,10 +152,9 @@ createMesh("colliseum", "irrlicht-newton-game.app/Contents/MacOS/media/media/med
 Then run these commands to create the bundle itself:
 
 ```bash
-cd buck-out/gen/irrlicht-newton-game
+cd bazel-bin/irrlicht-newton-game/irrlicht-newton-game.runfiles/__main__/irrlicht-newton-game
 mkdir -p irrlicht-newton-game.app/Contents/MacOS
-cp -r ../media irrlicht-newton-game.app/Contents/MacOS
-cp binary-osx\#macosx-x86_64 irrlicht-newton-game.app/Contents/MacOS/irrlicht-newton-game
+cp -r media/ irrlicht-newton-game irrlicht-newton-game.app/Contents/MacOS
 ```
 
 Now you might run your application using either Finder or `open irrlicht-newton-game.app`.
