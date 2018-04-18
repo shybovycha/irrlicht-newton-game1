@@ -1,8 +1,0 @@
-cxx_library(
-    name = "enet",
-    headers = glob([ "include/*.h" ]),
-    exported_headers = subdir_glob([ ("include/enet", "*.h") ]),
-    header_namespace = "enet",
-    srcs = glob([ "*.c" ]),
-    visibility = [ "PUBLIC" ],
-)

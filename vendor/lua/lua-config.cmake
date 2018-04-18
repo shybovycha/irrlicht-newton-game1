@@ -1,3 +1,0 @@
-add_library(lua STATIC IMPORTED)
-find_library(LUA_LIBRARY_PATH lua HINTS "${CMAKE_CURRENT_LIST_DIR}/")
-set_target_properties(lua PROPERTIES IMPORTED_LOCATION "${LUA_LIBRARY_PATH}")
