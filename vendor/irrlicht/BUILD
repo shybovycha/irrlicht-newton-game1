@@ -175,7 +175,6 @@ objc_library(
   textual_hdrs = glob([
     "include/*.h",
   ]),
-  # strip_include_prefix = "vendor/irrlicht/",
   srcs = glob([
     "source/Irrlicht/*.cpp",
     "source/Irrlicht/MacOSX/*.mm",

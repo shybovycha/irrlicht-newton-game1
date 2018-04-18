@@ -22,11 +22,11 @@ This repo contains the code for [Irrlicht + Newton game tutorial](http://shybovy
 * ~~Add automatic `media/` copying to the bundle/binary directory~~
 * ~~Generalize build rules for different platforms~~
 * ~~Upgrade Irrlicht to `1.8.4`~~
-* Upgrade NewtonGD to `3.14`
+* ~~Upgrade NewtonGD to `3.14`~~
 
 ## Step-by-step build
 
-1. install [Bazek](https://bazel.build/) from master branch
+1. install [Bazel](https://bazel.build/) from master branch
 2. to build project, run the command from the project root directory
 
   a. for OSX:

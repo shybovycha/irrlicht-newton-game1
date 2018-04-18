@@ -38,12 +38,11 @@ class Entity {
  private:
   scene::ISceneNode *mNode;
   NewtonBody *mBody;
-  dVector summaryForce;
 
  public:
-  Entity(scene::ISceneNode *node) : mNode(node), mBody(0), summaryForce(dVector(0, 0, 0)) {}
+  Entity(scene::ISceneNode *node) : mNode(node), mBody(0) {}
 
-  Entity(scene::ISceneNode *node, NewtonBody *body) : mNode(node), mBody(body), summaryForce(dVector(0, 0, 0)) {}
+  Entity(scene::ISceneNode *node, NewtonBody *body) : mNode(node), mBody(body) {}
 
   scene::ISceneNode *getSceneNode() const {
     return mNode;
@@ -55,14 +54,6 @@ class Entity {
 
   void setBody(NewtonBody *body) {
     mBody = body;
-  }
-
-  void addForce(dVector force) {
-    summaryForce += force;
-  }
-
-  dVector getSummaryForce() const {
-    return summaryForce;
   }
 };
 
@@ -178,25 +169,13 @@ class ScriptManager {
         {"KEY_XBUTTON2", 0x06}, // Windows 2000/XP: X2 mouse button
         {"KEY_BACK", 0x08}, // BACKSPACE key
         {"KEY_TAB", 0x09}, // TAB key
-        {"KEY_CLEAR", 0x0C}, // CLEAR key
         {"KEY_RETURN", 0x0D}, // ENTER key
         {"KEY_SHIFT", 0x10}, // SHIFT key
         {"KEY_CONTROL", 0x11}, // CTRL key
         {"KEY_MENU", 0x12}, // ALT key
         {"KEY_PAUSE", 0x13}, // PAUSE key
         {"KEY_CAPITAL", 0x14}, // CAPS LOCK key
-        {"KEY_KANA", 0x15}, // IME Kana mode
-        {"KEY_HANGUEL", 0x15}, // IME Hanguel mode (maintained for compatibility use KEY_HANGUL)
-        {"KEY_HANGUL", 0x15}, // IME Hangul mode
-        {"KEY_JUNJA", 0x17}, // IME Junja mode
-        {"KEY_FINAL", 0x18}, // IME final mode
-        {"KEY_HANJA", 0x19}, // IME Hanja mode
-        {"KEY_KANJI", 0x19}, // IME Kanji mode
         {"KEY_ESCAPE", 0x1B}, // ESC key
-        {"KEY_CONVERT", 0x1C}, // IME convert
-        {"KEY_NONCONVERT", 0x1D}, // IME nonconvert
-        {"KEY_ACCEPT", 0x1E}, // IME accept
-        {"KEY_MODECHANGE", 0x1F}, // IME mode change request
         {"KEY_SPACE", 0x20}, // SPACEBAR
         {"KEY_PRIOR", 0x21}, // PAGE UP key
         {"KEY_NEXT", 0x22}, // PAGE DOWN key
@@ -249,10 +228,6 @@ class ScriptManager {
         {"KEY_KEY_X", 0x58}, // X key
         {"KEY_KEY_Y", 0x59}, // Y key
         {"KEY_KEY_Z", 0x5A}, // Z key
-        {"KEY_LWIN", 0x5B}, // Left Windows key (Microsoft� Natural� keyboard)
-        {"KEY_RWIN", 0x5C}, // Right Windows key (Natural keyboard)
-        {"KEY_APPS", 0x5D}, // Applications key (Natural keyboard)
-        {"KEY_SLEEP", 0x5F}, // Computer Sleep key
         {"KEY_NUMPAD0", 0x60}, // Numeric keypad 0 key
         {"KEY_NUMPAD1", 0x61}, // Numeric keypad 1 key
         {"KEY_NUMPAD2", 0x62}, // Numeric keypad 2 key
@@ -306,27 +281,10 @@ class ScriptManager {
         {"KEY_COMMA", 0xBC}, // Comma Key  ","
         {"KEY_MINUS", 0xBD}, // Minus Key  "-"
         {"KEY_PERIOD", 0xBE}, // Period Key "."
-        {"KEY_OEM_2", 0xBF}, // for US    "/?"
-        {"KEY_OEM_3", 0xC0}, // for US    "`~"
-        {"KEY_OEM_4", 0xDB}, // for US    "[{"
-        {"KEY_OEM_5", 0xDC}, // for US    "\|"
-        {"KEY_OEM_6", 0xDD}, // for US    "]}"
-        {"KEY_OEM_7", 0xDE}, // for US    "'""
-        {"KEY_OEM_8", 0xDF}, // None
-        {"KEY_OEM_AX", 0xE1}, // for Japan "AX"
-        {"KEY_OEM_102", 0xE2}, // "<>" or "\|"
-        {"KEY_ATTN", 0xF6}, // Attn key
-        {"KEY_CRSEL", 0xF7}, // CrSel key
-        {"KEY_EXSEL", 0xF8}, // ExSel key
-        {"KEY_EREOF", 0xF9}, // Erase EOF key
-        {"KEY_PLAY", 0xFA}, // Play key
-        {"KEY_ZOOM", 0xFB}, // Zoom key
-        {"KEY_PA1", 0xFD}, // PA1 key
-        {"KEY_OEM_CLEAR", 0xFE}, // Clear key
     };
 
-    for (auto it = keyMapping.begin(); it != keyMapping.end(); ++it) {
-      luaState.GetGlobalEnvironment().Set(it->first, it->second);
+    for (auto it : keyMapping) {
+      luaState.GetGlobalEnvironment().Set(it.first, it.second);
     }
   }
 
@@ -377,10 +335,13 @@ class ScriptManager {
   }
 
   void addAnimator(scene::ISceneNode *node, scene::ISceneNodeAnimator *anim) {
-    if (anim) {
-      node->addAnimator(anim);
-      anim->drop();
+    if (!anim) {
+        printf("[ERROR] No animator for node\n");
+        return;
     }
+    
+    node->addAnimator(anim);
+    anim->drop();
   }
 
   NewtonCollision *createSphereCollisionShape(scene::ISceneNode *node, float radius) {
@@ -481,26 +442,31 @@ class ScriptManager {
     NewtonDestroy(newtonWorld);
   }
 
-  void createTrimeshShape(irr::scene::IMeshBuffer *meshBuffer, NewtonCollision *treeCollision,
+  void createTrimeshShape(irr::scene::IMeshBuffer *meshBuffer, 
+                          NewtonCollision *treeCollision,
                           irr::core::vector3df scale = irr::core::vector3df(1, 1, 1)) {
+    
     irr::core::vector3df vArray[3];
 
     switch (meshBuffer->getVertexType()) {
       case irr::video::EVT_STANDARD:
       case irr::video::EVT_2TCOORDS:
-      case irr::video::EVT_TANGENTS:break;
+      case irr::video::EVT_TANGENTS:
+        break;
 
-      default:printf("Newton error: Unknown vertex type in static mesh: %d\n", meshBuffer->getVertexType());
+      default:
+        printf("Newton error: Unknown vertex type in static mesh: %d\n", meshBuffer->getVertexType());
+      break;
     }
 
     irr::video::S3DVertex *mb_vertices = (irr::video::S3DVertex *) meshBuffer->getVertices();
 
     u16 *mb_indices = meshBuffer->getIndices();
 
-    for (unsigned int j = 0; j < meshBuffer->getIndexCount(); j += 3) {
-      int v1i = mb_indices[j + 0];
-      int v2i = mb_indices[j + 1];
-      int v3i = mb_indices[j + 2];
+    for (unsigned long j = 0; j < meshBuffer->getIndexCount(); j += 3) {
+      long v1i = mb_indices[j + 0];
+      long v2i = mb_indices[j + 1];
+      long v3i = mb_indices[j + 2];
 
       vArray[0] = mb_vertices[v1i].Pos * scale.X;
       vArray[1] = mb_vertices[v2i].Pos * scale.Y;
@@ -511,12 +477,10 @@ class ScriptManager {
   }
 
  public:
-  ScriptManager(irr::IrrlichtDevice *_device, scene::ISceneManager *_smgr, video::IVideoDriver *_driver) {
-    driver = _driver;
-    smgr = _smgr;
-    device = _device;
-
-    initPhysics();
+  ScriptManager(irr::IrrlichtDevice *device, scene::ISceneManager *smgr, video::IVideoDriver *driver) : device(device), smgr(smgr), driver(driver) {}
+  
+  void init() {
+      initPhysics();
   }
 
   void createSphereNode(const std::string name, const std::string textureFile) {
@@ -550,8 +514,13 @@ class ScriptManager {
     entities[name] = new Entity(node);
   }
 
-  void createAnimatedNode(const std::string name, const std::string modelFile, const std::string textureFile,
-                          unsigned int framesFrom, unsigned int framesTo, unsigned int animationSpeed) {
+  void createAnimatedNode(const std::string name,
+                          const std::string modelFile, 
+                          const std::string textureFile,
+                          unsigned int framesFrom, 
+                          unsigned int framesTo, 
+                          unsigned int animationSpeed) {
+
     scene::IAnimatedMeshSceneNode *node = smgr->addAnimatedMeshSceneNode(smgr->getMesh(modelFile.c_str()));
 
     node->setMaterialFlag(video::EMF_LIGHTING, false);
@@ -572,8 +541,12 @@ class ScriptManager {
     addAnimator(node, anim);
   }
 
-  void addNodeForwardAnimator(const std::string name, LuaTable from, LuaTable to, unsigned int animationTime,
+  void addNodeForwardAnimator(const std::string name, 
+                              LuaTable from, 
+                              LuaTable to, 
+                              unsigned int animationTime,
                               bool loop) {
+
     scene::ISceneNode *node = findEntity(name)->getSceneNode();
     scene::ISceneNodeAnimator *anim = smgr->createFlyStraightAnimator(tableToVector3df(from), tableToVector3df(to),
                                                                       animationTime, loop);
@@ -714,17 +687,21 @@ class ScriptManager {
     globalPoint = matrix.TransformVector(dVector(0, 0, 0));
 
     NewtonBodyAddImpulse(body, &forceVec[0], &globalPoint[0], 0.1f);
-
-    // NewtonCollisionForEachPolygonDo(shape, )
   }
 
   void drawPhysicsDebug() {
     for (auto &kv : entities) {
       Entity *entity = kv.second;
 
-      if (!entity->getBody())
+      if (!entity->getBody()) {
         continue;
+      }
 
+      drawPhysicEntity(entity);
+    }
+  }
+  
+  void drawPhysicEntity(Entity* entity) {
       NewtonCollision *shape = NewtonBodyGetCollision(entity->getBody());
 
       dMatrix offset = dGetIdentityMatrix();
@@ -746,11 +723,10 @@ class ScriptManager {
 
       driver->setTransform(video::ETS_WORLD, core::matrix4());
       driver->draw3DBox(core::aabbox3d<f32>(minBBox, maxBBox), video::SColor(255, 0, 255, 0));
-    }
   }
 
   void handleFrame(float dt) {
-    auto handler = luaState.GetGlobalEnvironment().Get < LuaFunction < void(void) >> ("handleFrame");
+    auto handler = luaState.GetGlobalEnvironment().Get<LuaFunction<void(void)>> ("handleFrame");
 
     updatePhysics(dt);
     setKeyStates();
@@ -783,7 +759,7 @@ class ScriptManager {
 
     luaState.RunScript(code);
 
-    auto scriptMainFn = luaState.GetGlobalEnvironment().Get < LuaFunction < void(void) >> ("main");
+    auto scriptMainFn = luaState.GetGlobalEnvironment().Get<LuaFunction<void(void)>> ("main");
     scriptMainFn.Invoke();
   }
 
@@ -818,26 +794,20 @@ public:
 
 class MyEventReceiver : public IEventReceiver {
  public:
-  MyEventReceiver(ScriptManager *scriptManager) {
-    scriptMgr = scriptManager;
-
-    for (u32 i = 0; i < KEY_KEY_CODES_COUNT; ++i)
-      scriptMgr->setKeyState(i, false);
+  MyEventReceiver(ScriptManager *scriptMgr) : scriptMgr(scriptMgr) {}
+  
+  void init() {
+      for (u32 i = 0; i < KEY_KEY_CODES_COUNT; ++i) {
+        scriptMgr->setKeyState(i, false);
+      }
   }
 
   // This is the one method that we have to implement
   virtual bool OnEvent(const SEvent &event) {
     // Remember whether each key is down or up
-    if (event.EventType == irr::EET_KEY_INPUT_EVENT)
+    if (event.EventType == irr::EET_KEY_INPUT_EVENT) {
       scriptMgr->setKeyState(event.KeyInput.Key, event.KeyInput.PressedDown);
-
-    /*
-    if (this->eventHandlers[eventType]) {
-        for (auto handler : this->eventHandlers[eventType]) {
-            handler->handle(event);
-        }
     }
-    */
 
     return false;
   }
@@ -866,7 +836,12 @@ int main() {
   printf("Creating device...\n");
 
   IrrlichtDevice *device = createDevice(video::EDT_OPENGL,
-                                        core::dimension2d<u32>(640, 480), 16, false, false, false);
+                                        core::dimension2d<u32>(640, 480), 
+                                        16, 
+                                        false, 
+                                        false, 
+                                        false
+  );
 
   if (device == 0) {
     printf("[ERROR] Could not create device!\n");
@@ -880,12 +855,16 @@ int main() {
   printf("Creating script manager...\n");
 
   ScriptManager *scriptMgr = new ScriptManager(device, smgr, driver);
+  
+  scriptMgr->init();
 
   printf("Creating event receiver...\n");
 
-  MyEventReceiver receiver(scriptMgr);
+  MyEventReceiver *receiver = new MyEventReceiver(scriptMgr);
+  
+  receiver->init();
 
-  device->setEventReceiver(&receiver);
+  device->setEventReceiver(receiver);
 
   scriptMgr->loadScript(
       "irrlicht-newton-game/irrlicht-newton-game.runfiles/__main__/irrlicht-newton-game/media/scripts/test1.lua");

@@ -21,3 +21,8 @@ bazel-genfiles
 bazel-out
 bazel-testlogs
 bazel-irrlicht-newton-game1
+*.creator
+*.config
+*.files
+*.includes
+*.user

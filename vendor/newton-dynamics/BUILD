@@ -150,4 +150,3 @@ cc_library(
     copts = newton_copts,
     visibility = [ "//visibility:public" ]
 )
-
