@@ -31,29 +31,29 @@ This repo contains the code for [Irrlicht + Newton game tutorial](http://shybovy
 
   a. for OSX:
 
-    ```bash
-    bazel build //irrlicht-newton-game:irrlicht-newton-game --apple_platform_type=macos
-    ```
+   ```bash
+   bazel build //irrlicht-newton-game:irrlicht-newton-game --apple_platform_type=macos
+   ```
 
   b. for Linux & others:
 
-    ```bash
-    bazel build //irrlicht-newton-game:irrlicht-newton-game
-    ```
+   ```bash
+   bazel build //irrlicht-newton-game:irrlicht-newton-game
+   ```
 
 3. run a demo with
 
   a. for OSX:
 
-    ```bash
-    bazel run //irrlicht-newton-game:irrlicht-newton-game
-    ```
+   ```bash
+   bazel run //irrlicht-newton-game:irrlicht-newton-game
+   ```
 
   b. for others:
 
-    ```bash
-    bazel run //irrlicht-newton-game:irrlicht-newton-game --apple_platform_type=macos
-    ```
+   ```bash
+   bazel run //irrlicht-newton-game:irrlicht-newton-game --apple_platform_type=macos
+   ```
 
 ## Important hints & troubleshooting
 
@@ -158,3 +158,13 @@ cp -r media/ irrlicht-newton-game irrlicht-newton-game.app/Contents/MacOS
 ```
 
 Now you might run your application using either Finder or `open irrlicht-newton-game.app`.
+
+### Could not build Newton on Windows
+
+A "hard to detect and fix" error might be found on Windows:
+
+```
+vendor/newton-dynamics/sdk/dCustomJoints/dCustomJoint.cpp(20): error C2491: 'dCustomJoint::m_key': definition of dllimport static data member not allowed
+```
+
+This is due to the aambigous linkage type - VisualStudio does not know whether it is static or dynamic, whilst by default it assumes dynamic linkage for Windows platform. This is defined by the `CUSTOM_JOINTS_API` macro in the `vendor/newton-dynamics/sdk/dCustomJoints/dCustomAlloc.h` file. To prevent this, you will need to pass the `_CUSTOM_JOINTS_STATIC_LIB` preprocessor constant. In bazel this could be achieved by using the `defines: [ "_CUSTOM_JOINTS_STATIC_LIB", ]` property.

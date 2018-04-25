@@ -62,6 +62,12 @@ cc_library(
     hdrs = glob([ "sdk/dCustomJoints/*.h" ]),
     includes = [ "sdk/dCustomJoints/" ],
     srcs = glob([ "sdk/dCustomJoints/*.cpp" ]),
+    defines = select({
+        ":windows": [
+            "_CUSTOM_JOINTS_STATIC_LIB"
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(

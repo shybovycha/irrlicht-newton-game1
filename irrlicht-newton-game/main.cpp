@@ -18,7 +18,6 @@ and tell the linker to link with the .lib file.
 #endif
 
 #include <fstream>
-#include <unistd.h>
 #include <map>
 #include <sstream>
 #include <iostream>

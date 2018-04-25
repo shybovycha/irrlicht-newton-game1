@@ -155,10 +155,32 @@ cc_library(
     "source/Irrlicht/aesGladman/*.h",
   ]),
   srcs = glob([ "source/Irrlicht/aesGladman/*.cpp" ]),
-  copts = [
-    "-xc++",
-    "-Wno-narrowing",
-  ]
+  copts = select({
+    ":windows": [],
+    "//conditions:default": [
+      "-xc++",
+      "-Wno-narrowing",
+    ],
+  }),
+)
+
+cc_import(
+  name = "d3dx9",
+  # hdrs = glob([ "$DXSDK_DIR/Include" ]),
+  # static_library = "libmylib.lib", # A normal static library
+  interface_library = "$(DXSDK_DIR)/Lib/x64/d3dx9.lib", # An import library for mylib.dll
+  # shared_library = "mylib.dll",
+  system_provided = True,
+)
+
+cc_library(
+  name = "DirectX",
+  deps = [
+    ":d3dx9",
+  ],
+  includes = [
+    "$(DXSDK_DIR)/Include",
+  ],
 )
 
 objc_library(
@@ -263,7 +285,7 @@ cc_library(
   textual_hdrs = glob([
     "include/*.h",
   ]),
-  strip_include_prefix = "vendor/irrlicht/",
+  # strip_include_prefix = "vendor/irrlicht/", # does not work on Windows
   srcs = glob([
     "source/Irrlicht/*.cpp",
   ]),
@@ -274,7 +296,7 @@ cc_library(
     ":bzip2",
     ":zlib",
     ":aesGladman",
-    # here should be DirectX
+    ":DirectX",
   ],
   copts = [
     "-DIRRLICHT_EXPORTS=1",
